@@ -31,6 +31,10 @@ public:
 	uint32_t getSrcRtpPort() const;
 	uint32_t getDestRtpPort() const;
 	State getState() const;
+    std::string getFromTag() const;
+    void setFromTag(std::string fromTag);
+    std::string getToTag() const;
+    void setToTag(std::string toTag);
 
 private:
 	std::string _callID;
@@ -40,6 +44,9 @@ private:
 
 	uint32_t _srcRtpPort;
 	uint32_t _destRtpPort;
+
+    std::string _fromTag;
+    std::string _toTag;
 };
 
 #endif

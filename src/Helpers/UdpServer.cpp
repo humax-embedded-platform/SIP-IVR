@@ -59,7 +59,7 @@ void UdpServer::startReceive()
 				recvfrom(_sockfd, buffer, BUFFER_SIZE, 0, reinterpret_cast<struct sockaddr*>(&senderEndPoint), &len);
 #endif
 				if (len) {
-					LOG_W << "Received from " << inet_ntoa(senderEndPoint.sin_addr) << ":" << ntohs(senderEndPoint.sin_port) << " with message: \n" << buffer << ENDL;
+                    LOG_I << "Received from " << inet_ntoa(senderEndPoint.sin_addr) << ":" << ntohs(senderEndPoint.sin_port) << " with message: \n" << buffer << ENDL;
 				}
 				if (!_keepRunning) return;
 				_onNewMessageEvent(std::move(buffer), senderEndPoint);
