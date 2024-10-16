@@ -470,6 +470,9 @@ bool RequestsHandler::registerClient(std::shared_ptr<SipClient> client)
         std::cout << "New Client: " << client->getNumber() << std::endl;
         _clients.emplace(client->getNumber(), client);
         return true;
+    } else {
+        // replace ex
+        _clients[client->getNumber()] = client;
     }
     return false;
 }

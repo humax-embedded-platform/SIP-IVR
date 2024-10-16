@@ -1,93 +1,92 @@
-#include "UdpClient.h"
+#include "UdpClient.hpp"
+#include <sstream>
+#include <vector>
+#include <thread>
+#include <cstring>
+#include <Log.hpp>
 
-UdpClient::UdpClient(string serverAddress,int port) : running(true)
+UdpClient::UdpClient(std::string ip, int port, OnNewMessageEvent event) : _ip(std::move(ip)), _port(port), _onNewMessageEvent(event), _keepRunning(false)
 {
 
-    struct addrinfo hints,*res;
-    memset(&hints,0,sizeof(hints));
-    hints.ai_family=AF_INET;
-    hints.ai_socktype=SOCK_DGRAM;
+    LOG_D << "UdpClient: " << _ip << ":" << _port << ENDL;
+#if defined _WIN32 || defined _WIN64
+	WSADATA wsa;
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+	{
+		std::cerr << "Failed. Error Code: " << WSAGetLastError() << std::endl;
+		exit(EXIT_FAILURE);
+	}
+#endif
 
-    if(int status= getaddrinfo(serverAddress.c_str(),to_string(port).c_str(),&hints,&res)!=0){
-        printf("Error getting address\n");
-        exit(EXIT_FAILURE);
-    }
+	if ((_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+		std::cerr << "socket creation failed" << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
-
-    sockfd=socket(res->ai_family,res->ai_socktype,res->ai_protocol);
-    if(sockfd<0){
-        printf("Error opening socket");
-        exit(EXIT_FAILURE);
-    }
-
-
-    memcpy(&serverAddr,res->ai_addr,res->ai_addrlen);
-    
-    freeaddrinfo(res);
-
-
-    sendThread= thread(&UdpClient::processSendQueue,this);
-    recvThread=thread(&UdpClient::processReceiveQueue,this);
-
+	std::memset(&_servaddr, 0, sizeof(_servaddr));
+	_servaddr.sin_family = AF_INET;
+	_servaddr.sin_addr.s_addr = inet_addr(_ip.c_str());
+	_servaddr.sin_port = htons(port);
 }
 
-
-UdpClient::~UdpClient(){
-    running=false;
-    shutdown(sockfd,SHUT_RDWR);
-    //wait untill the thread finishes his job.
-    if(sendThread.joinable()){
-        sendThread.join();
-    }
-    close(sockfd);
+UdpClient::~UdpClient()
+{
+	closeServer();
 }
 
-void UdpClient::pushMessageToSendQ(string message){
-    lock_guard<mutex>lock(sendMutex);
-    sendQueue.push(message);
+std::string UdpClient::getIp() const
+{
+    return _ip;
 }
-void UdpClient::pushMessageToRecvQ(string message){
-    lock_guard<mutex>lock(recvMutex);
-    recvQueue.push(message);
+
+int UdpClient::getPort() const
+{
+    return _port;
 }
-string UdpClient::popMessageFromRecvQ(){
-    lock_guard<mutex>lock(recvMutex);
-    string outgoingMessage;
-    if(!recvQueue.empty()){
-        outgoingMessage=recvQueue.front();
-        recvQueue.pop();
-    }
-    return outgoingMessage;
+
+void UdpClient::startReceive()
+{
+	_keepRunning = true;
+	_receiverThread = std::thread([=]()
+		{
+			char buffer[BUFFER_SIZE];
+			sockaddr_in senderEndPoint;
+			std::memset(&senderEndPoint, 0, sizeof(senderEndPoint));
+			int len = sizeof(senderEndPoint);
+
+			while (_keepRunning)
+			{
+				memset(buffer, 0, BUFFER_SIZE);
+				std::memset(&senderEndPoint, 0, sizeof(senderEndPoint));
+#ifdef __linux__
+				recvfrom(_sockfd, buffer, BUFFER_SIZE, 0, reinterpret_cast<struct sockaddr*>(&senderEndPoint), (socklen_t*)&len);
+#elif defined _WIN32 || defined _WIN64
+				recvfrom(_sockfd, buffer, BUFFER_SIZE, 0, reinterpret_cast<struct sockaddr*>(&senderEndPoint), &len);
+#endif
+				if (len) {
+                    LOG_I << "Received from " << inet_ntoa(senderEndPoint.sin_addr) << ":" << ntohs(senderEndPoint.sin_port) << " with message: \n" << buffer << ENDL;
+				}
+				if (!_keepRunning) return;
+				_onNewMessageEvent(std::move(buffer), senderEndPoint);
+			}
+		});
 }
-void UdpClient::processSendQueue(){
-    //Check if the program is stopped.
-    while(running){
-        string outgoingMessage;
-        //mutex area
-        {
-            lock_guard<mutex>lock(sendMutex);
-            if(!sendQueue.empty()){
-                outgoingMessage=sendQueue.front();
-                sendQueue.pop();
-            }
-        }
-        if(!outgoingMessage.empty()){
-            sendto(sockfd,outgoingMessage.c_str(),outgoingMessage.length(),0,(const struct sockaddr*)&serverAddr,sizeof(serverAddr));
-            
-        }else{
-            //Sleep for a short duration to prevent busy waiting.
-            this_thread::sleep_for(chrono::milliseconds(100));
-        }
-    }
+
+int UdpClient::send(std::string buffer)
+{
+    LOG_D << "Sending to server with message: \n" << buffer << ENDL;
+	return sendto(_sockfd, buffer.c_str(), std::strlen(buffer.c_str()),
+        0, reinterpret_cast<const struct sockaddr*>(&_servaddr), sizeof(_servaddr));
 }
-void UdpClient::processReceiveQueue(){
-    char buffer[1024];
-    while(running){
-        socklen_t len=sizeof(serverAddr);
-        int n=recvfrom(sockfd,buffer,1024,0,(struct sockaddr*)&serverAddr,&len);
-        if(n>0){
-            buffer[n]='\0';
-            pushMessageToRecvQ(string(buffer));
-        }
-    }
+
+void UdpClient::closeServer()
+{
+	_keepRunning = false;
+	shutdown(_sockfd, 2);
+#ifdef __linux__
+	close(_sockfd);
+#elif defined _WIN32 || defined _WIN64
+	closesocket(_sockfd);
+#endif
+	_receiverThread.join();
 }

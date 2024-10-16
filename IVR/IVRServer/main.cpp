@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include "UdpClient.h"
-#include "SipMessage.h"
+#include "cxxopts.hpp"
+#include "Application.hpp"
+#include "SipMessage.hpp"
 #include "CallDetails.h"
-#include "SdpSipMessage.h"
+#include "SipSdpMessage.hpp"
 #include <iostream>
 #include <sstream>
 #include <thread>
@@ -15,6 +16,7 @@
 #define CALLER_URI "sip:phong4@192.168.0.4"
 #define CALLEE_URI "sip:phong2@192.168.0.4"
 
+/*
 thread receiveSipThread;
 
 // Function prototypes
@@ -30,45 +32,42 @@ void parseIncomingMessage(CallDetails *callDetails);
 
 // For stopping the receiveSipThread safely.
 atomic_bool running = true;
+*/
 
-// Udp Client for sip messaging.
-UdpClient *udp;
-
-int main()
+int main(int argc, char** argv)
 {
 
-    udp = new UdpClient("192.168.0.4", 5060);
 
-    CallDetails *callDetails = new CallDetails(to_string(rand()), CALLER_URI, CALLEE_URI);
-    receiveSipThread = thread(&parseIncomingMessage, callDetails);
+    cxxopts::Options options("IVR Application", "Open source application for an automated telephone system");
 
-    registerUser(callDetails);
-    sleep(1);
+    options.add_options()
+        ("h,help", "Print usage")
+        ("i,ip", "Sip server ip", cxxopts::value<std::string>())
+        ("p,port", "Sip server ip (default: 5060).", cxxopts::value<int>()->default_value(std::to_string(5060)));
 
-    while (true)
+    auto result = options.parse(argc, argv);
+
+    if (result.count("help"))
     {
-
-        switch (callDetails->getCallState())
-        {
-        case REGISTERED:
-            initiateCall(callDetails);
-            break;
-        case CONNECTED:
-            terminateCall(callDetails);
-            break;
-        case TERMINATED:
-            running = false;
-            receiveSipThread.join();
-            exit(EXIT_SUCCESS);
-        default:
-            break;
-        }
-
-        sleep(1);
+        std::cout << options.help() << std::endl;
+        exit(0);
     }
-    // Implement logic for user registration and call actions
+
+    try
+    {
+        std::string ip = result["ip"].as<std::string>();
+        int port = result["port"].as<int>();
+        Application app;
+        std::cout << "Application has been started ..." << std::endl;
+        getchar();
+    }
+    catch (const cxxopts::OptionException&)
+    {
+        std::cout << "Please enter ip and port." << std::endl;
+    }
 }
 
+/*
 void parseIncomingMessage(CallDetails *callDetails)
 {
     string sipMessageString;
@@ -79,23 +78,13 @@ void parseIncomingMessage(CallDetails *callDetails)
     while (running)
     {
 
-        buffer += udp->popMessageFromRecvQ();
+        string buffer = udp->popMessageFromRecvQ();
+        std::cout << "buffer: " << buffer << std::endl;
 
-        size_t pos = 0;
-        while (pos <= buffer.length())
-        {
-            pos = buffer.find(delimiter);
-            if (pos != string::npos)
-            {
-                SipMessage tempMessage(LOCAL_IP, SIP_PORT, SIP_SERVER);
-                sipMessageString = buffer.substr(startPos, pos + delimiter.length());
-                tempMessage.setSipFromString(sipMessageString);
-                receiveSIPMessage(tempMessage, callDetails);
-                /* needs improvement for the body part. !!!*/
 
-                buffer = buffer.substr(pos + delimiter.length(), buffer.length());
-            }
-        }
+
+        // sleep(1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 
@@ -235,3 +224,4 @@ void receiveSIPMessage(SipMessage message, CallDetails *callDetails)
     // Simulated message receiving (details omitted)
     // The candidate needs to figure out how to handle different responses
 }
+*/
