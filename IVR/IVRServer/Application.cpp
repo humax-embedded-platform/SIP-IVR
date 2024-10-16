@@ -3,13 +3,20 @@
 #include "SipMessageTypes.h"
 #include "IDGen.hpp"
 #include "AppDefines.h"
+#include "session/CallSession.hpp"
+#include "session/SessionManager.h"
+#include "media/MediaSession.h"
+#include "media/MediaSessionManager.h"
 
-#define SIP_SERVER "192.168.0.4"
-#define SIP_PORT 5060
 
-Application::Application() : _server(SIP_SERVER, SIP_PORT, std::bind(&Application::onNewMessage, this, std::placeholders::_1, std::placeholders::_2)) {
+Application::Application(std::string server_ip, int server_port, std::string app_ip, int app_port)
+    : _server_ip(server_ip),
+    _server_port(server_port),
+    _app_ip(app_ip),
+    _app_port(app_port),
+    _server(server_ip, server_port, std::bind(&Application::onNewMessage, this, std::placeholders::_1, std::placeholders::_2)) {
+    LOG_W << "Application created: " << server_ip << ":" << server_port << ", " << app_ip << ":" << app_port << ENDL;
     _server.startReceive();
-
     _handlers.emplace(SipMessageTypes::CANCEL, std::bind(&Application::OnCancel, this, std::placeholders::_1));
     _handlers.emplace(SipMessageTypes::INVITE, std::bind(&Application::OnInvite, this, std::placeholders::_1));
     _handlers.emplace(SipMessageTypes::TRYING, std::bind(&Application::OnTrying, this, std::placeholders::_1));
@@ -54,11 +61,6 @@ void Application::sendToServer(std::shared_ptr<SipMessage> message)
     _server.send(message->toPayload());
 }
 
-void Application::OnRegister(std::shared_ptr<SipMessage> data)
-{
-    LOG_D << "OnRegister: " << ENDL;
-}
-
 void Application::OnCancel(std::shared_ptr<SipMessage> data)
 {
 
@@ -71,7 +73,34 @@ void Application::onReqTerminated(std::shared_ptr<SipMessage> data)
 
 void Application::OnInvite(std::shared_ptr<SipMessage> data)
 {
-    LOG_D << "OnInvite: " << ENDL;
+    std::shared_ptr<SipSdpMessage> sdp = std::dynamic_pointer_cast<SipSdpMessage>(data);
+    std::string callID = sdp->getCallID();
+    LOG_D << "callID: " << callID << ENDL;
+    std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getFromNumber());
+    if (callSession) {
+        LOG_D << "Session already exists" << ENDL;
+        return;
+    } else {
+        callSession = SessionManager::getInstance()->createSession(data->getFromNumber(), callID);
+        std::shared_ptr<MediaSession> mediaSession = MediaSessionManager::getInstance()->createSession(sdp->getRtpHost(), sdp->getRtpPort());
+        LOG_D << "Session created" << ENDL;
+        callSession->setMediaSession(mediaSession);
+        LOG_D << "Media session created" << ENDL;
+        callSession->setState(CallSession::State::Connected);
+    }
+
+    // response to INVITE
+    LOG_D << "response to INVITE" << ENDL;
+    std::shared_ptr<SipSdpMessage> response = sdp;
+    LOG_D << "response: " << response->toPayload() << ENDL;
+    response->setHeader(std::string("SIP/2.0 200 OK"));
+    response->setTo(std::string(IVR_ACCOUNT_NAME) + "<" + std::string("sip:") + IVR_ACCOUNT_NAME + "@" + _server.getIp() + ">;tag=" + getAppTag());
+    response->setContact(std::string("<sip:") + IVR_ACCOUNT_NAME + "@" + _server.getIp() + ":" + std::to_string(_server.getPort()) + ">");
+    LOG_D << "response: " << response->toPayload() << ENDL;
+
+    response->setRtpHost(_app_ip);
+    response->setRtpPort(_app_port);
+    sendToServer(response);
 }
 
 void Application::OnTrying(std::shared_ptr<SipMessage> data)

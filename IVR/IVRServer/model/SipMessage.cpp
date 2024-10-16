@@ -176,7 +176,12 @@ void SipMessage::setContentLength(std::string value)
 	_contentLength = std::move(value);
 }
 
-std::string SipMessage::toPayload() const
+void SipMessage::setContentType(std::string value)
+{
+    _contentType = std::move(value);
+}
+
+std::string SipMessage::toPayload()
 {
     std::string message = _header + SipMessageHeaders::HEADERS_DELIMETER + \
                           SipMessageHeaders::VIA + ": " + _via + SipMessageHeaders::HEADERS_DELIMETER + \
@@ -185,11 +190,12 @@ std::string SipMessage::toPayload() const
                           SipMessageHeaders::CALL_ID + ": " + _callID + SipMessageHeaders::HEADERS_DELIMETER + \
                           SipMessageHeaders::CSEQ + ": " + _cSeq + SipMessageHeaders::HEADERS_DELIMETER + \
                           SipMessageHeaders::CONTACT + ": " + _contact + SipMessageHeaders::HEADERS_DELIMETER + \
+                          SipMessageHeaders::CONTENT_TYPE + ": " + _contentType + SipMessageHeaders::HEADERS_DELIMETER + \
                           "Expires: 60" + SipMessageHeaders::HEADERS_DELIMETER + \
                           "Max-Forwards: 70" + SipMessageHeaders::HEADERS_DELIMETER + \
                           "Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO" + SipMessageHeaders::HEADERS_DELIMETER + \
-                          "Content-Length: " + _contentLength + SipMessageHeaders::HEADERS_DELIMETER + \
-                          "User-Agent: " + APP_USERAGENT + SipMessageHeaders::HEADERS_DELIMETER;
+                          "User-Agent: " + APP_USERAGENT + SipMessageHeaders::HEADERS_DELIMETER + \
+                          "Content-Length: " + _contentLength + SipMessageHeaders::HEADERS_DELIMETER + SipMessageHeaders::HEADERS_DELIMETER;
     return message;
 }
 
@@ -256,6 +262,11 @@ std::string SipMessage::getReferToNumber() const
 std::string SipMessage::getContentLength() const
 {
 	return _contentLength;
+}
+
+std::string SipMessage::getContentType() const
+{
+    return _contentType;
 }
 
 std::string SipMessage::extractNumber(std::string header) const

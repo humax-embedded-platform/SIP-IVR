@@ -1,4 +1,5 @@
 #include "CallSession.hpp"
+#include "Log.hpp"
 
 CallSession::CallSession(std::string callID) :
     _callID(std::move(callID)), _state(State::Invited)
@@ -12,7 +13,7 @@ void CallSession::setState(State state)
 	_state = state;
 	if (state == State::Connected)
 	{
-		std::cout << "Session Created between " << _src->getNumber() << " and " << _dest->getNumber() << std::endl;
+        LOG_D << "Session Created " << _callID << ENDL;
 	}
 }
 
@@ -60,6 +61,11 @@ std::string CallSession::getToTag() const
 void CallSession::setToTag(std::string toTag)
 {
     _toTag = toTag;
+}
+
+void CallSession::setMediaSession(std::shared_ptr<MediaSession> mediaSession)
+{
+    _mediaSession = mediaSession;
 }
 
 std::string CallSession::toString()

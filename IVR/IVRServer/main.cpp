@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
+#include "AppDefines.h"
 
 #define SIP_SERVER "192.168.0.4"
 #define LOCAL_IP "192.168.0.4"
@@ -42,8 +43,10 @@ int main(int argc, char** argv)
 
     options.add_options()
         ("h,help", "Print usage")
-        ("i,ip", "Sip server ip", cxxopts::value<std::string>())
-        ("p,port", "Sip server ip (default: 5060).", cxxopts::value<int>()->default_value(std::to_string(5060)));
+        ("i,server-ip", "Sip server ip", cxxopts::value<std::string>())
+        ("p,server-port", std::string("Sip server port (default: ") + std::to_string(SEVER_PORT_DEFAULT) + ").", cxxopts::value<int>()->default_value(std::to_string(SEVER_PORT_DEFAULT)))
+        ("c,app-ip", "IVR application ip", cxxopts::value<std::string>())
+        ("m,app-port", std::string("IVR application port (default: ") + std::to_string(MEDIA_SERVER_PORT_DEFAULT) + ").", cxxopts::value<int>()->default_value(std::to_string(MEDIA_SERVER_PORT_DEFAULT)));
 
     auto result = options.parse(argc, argv);
 
@@ -55,9 +58,12 @@ int main(int argc, char** argv)
 
     try
     {
-        std::string ip = result["ip"].as<std::string>();
-        int port = result["port"].as<int>();
-        Application app;
+        std::string server_ip = result["server-ip"].as<std::string>();
+        int server_port = result["server-port"].as<int>();
+        std::string app_ip = result["app-ip"].as<std::string>();
+        int app_port = result["app-port"].as<int>();
+
+        Application app(server_ip, server_port, app_ip, app_port);
         std::cout << "Application has been started ..." << std::endl;
         getchar();
     }

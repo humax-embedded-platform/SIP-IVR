@@ -29,7 +29,7 @@ int SipSdpMessage::getRtpPort() const
 	return _rtpPort;
 }
 
-std::string SipSdpMessage::toPayload() const
+std::string SipSdpMessage::toPayload()
 {
     std::string msg = std::string("v=0") + SipMessageHeaders::HEADERS_DELIMETER +
                  "o=Z 0 20528078 IN IP4 " + _rtpHost + SipMessageHeaders::HEADERS_DELIMETER +
@@ -45,6 +45,11 @@ std::string SipSdpMessage::toPayload() const
                  "a=fmtp:101 0-16" + SipMessageHeaders::HEADERS_DELIMETER +
                  "a=sendrecv" + SipMessageHeaders::HEADERS_DELIMETER +
                  "a=rtcp-mux" + SipMessageHeaders::HEADERS_DELIMETER;
+
+    setContentType("application/sdp");
+    setContentLength(std::to_string(msg.size()));
+    std::string header = SipMessage::toPayload();
+    return header + msg;
 }
 
 void SipSdpMessage::parse()

@@ -26,6 +26,7 @@ public:
 	void setContact(std::string value);
 	void setReplaces(std::string value);
 	void setContentLength(std::string value);
+    void setContentType(std::string value);
 
 
 	std::string getType() const;
@@ -41,8 +42,9 @@ public:
 	std::string getContactNumber() const;
 	std::string getReferToNumber() const;
 	std::string getContentLength() const;
+    std::string getContentType() const;
 
-    virtual std::string toPayload() const;
+    virtual std::string toPayload();
 
 protected:
 	virtual void parse();

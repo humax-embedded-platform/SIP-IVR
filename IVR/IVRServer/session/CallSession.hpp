@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "SipClient.hpp"
-
+class MediaSession;
 class CallSession
 {
 public:
@@ -36,6 +36,8 @@ public:
     std::string getToTag() const;
     void setToTag(std::string toTag);
 
+    void setMediaSession(std::shared_ptr<MediaSession> mediaSession);
+
     std::string toString();
 private:
 	std::string _callID;
@@ -48,6 +50,8 @@ private:
 
     std::string _fromTag;
     std::string _toTag;
+
+    std::shared_ptr<MediaSession> _mediaSession;
 };
 
 #endif

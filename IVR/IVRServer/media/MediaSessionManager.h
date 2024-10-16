@@ -14,7 +14,7 @@ private:
 public:
     static MediaSessionManager* getInstance();
 
-    std::shared_ptr<MediaSession> createSession();
+    std::shared_ptr<MediaSession> createSession(std::string clientIp, int clientRtpPort);
 
 private:
     std::map<std::string, std::shared_ptr<MediaSession>> _sessionMap;

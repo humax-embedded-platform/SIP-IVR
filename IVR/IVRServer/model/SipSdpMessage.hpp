@@ -15,7 +15,7 @@ public:
     std::string getRtpHost() const;
 	int getRtpPort() const;
 
-    std::string toPayload() const override;
+    std::string toPayload() override;
 
 private:
 	void parse() override;

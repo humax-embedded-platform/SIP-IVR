@@ -8,14 +8,13 @@
 class Application
 {
 public:
-    Application();
+    Application(std::string server_ip, int server_port, std::string app_ip, int app_port);
 
 private:
     void onNewMessage(std::string data, sockaddr_in src);
     void sendToServer(std::shared_ptr<SipMessage> message);
 
 private:
-    void OnRegister(std::shared_ptr<SipMessage> data);
     void OnCancel(std::shared_ptr<SipMessage> data);
     void onReqTerminated(std::shared_ptr<SipMessage> data);
     void OnInvite(std::shared_ptr<SipMessage> data);
@@ -31,6 +30,10 @@ private:
 
 private:
     UdpClient _server;
+    std::string _server_ip;
+    int _server_port;
+    std::string _app_ip;
+    int _app_port;
     SipMessageFactory _messagesFactory;
     std::thread _registerThread;
     std::unordered_map<std::string, std::function<void(std::shared_ptr<SipMessage> request)>> _handlers;

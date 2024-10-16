@@ -15,6 +15,7 @@ private:
 public:
     static SessionManager* getInstance();
 
+    std::shared_ptr<CallSession> getSession(std::string callID);
     std::shared_ptr<CallSession> createSession(std::string callerNumber, std::string callID);
     void removeSession(std::string callID);
     void dumpSessions();
