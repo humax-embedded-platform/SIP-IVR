@@ -2,6 +2,7 @@
 #include "SipMessageHeaders.h"
 #include <string>
 #include <cstring>
+#include "Log.hpp"
 
 SipSdpMessage::SipSdpMessage(std::string message) : SipMessage(std::move(message))
 {
@@ -31,6 +32,7 @@ int SipSdpMessage::getRtpPort() const
 
 std::string SipSdpMessage::toPayload()
 {
+    LOG_D << "SipSdpMessage::toPayload" << ENDL;
     std::string msg = std::string("v=0") + SipMessageHeaders::HEADERS_DELIMETER +
                  "o=Z 0 20528078 IN IP4 " + _rtpHost + SipMessageHeaders::HEADERS_DELIMETER +
                  "s=Z" + SipMessageHeaders::HEADERS_DELIMETER +

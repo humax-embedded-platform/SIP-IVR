@@ -13,7 +13,7 @@ class SipMessage
 {
 public:
 
-    SipMessage();
+    explicit SipMessage();
     SipMessage(std::string message);
 
 	void setType(std::string value);

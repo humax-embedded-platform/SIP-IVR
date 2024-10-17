@@ -73,30 +73,25 @@ void Application::onReqTerminated(std::shared_ptr<SipMessage> data)
 
 void Application::OnInvite(std::shared_ptr<SipMessage> data)
 {
+    LOG_I << ENDL;
     std::shared_ptr<SipSdpMessage> sdp = std::dynamic_pointer_cast<SipSdpMessage>(data);
     std::string callID = sdp->getCallID();
-    LOG_D << "callID: " << callID << ENDL;
-    std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getFromNumber());
+    std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(callID);
     if (callSession) {
         LOG_D << "Session already exists" << ENDL;
         return;
     } else {
-        callSession = SessionManager::getInstance()->createSession(data->getFromNumber(), callID);
+        callSession = SessionManager::getInstance()->createSession(callID);
         std::shared_ptr<MediaSession> mediaSession = MediaSessionManager::getInstance()->createSession(sdp->getRtpHost(), sdp->getRtpPort());
-        LOG_D << "Session created" << ENDL;
         callSession->setMediaSession(mediaSession);
-        LOG_D << "Media session created" << ENDL;
         callSession->setState(CallSession::State::Connected);
     }
 
     // response to INVITE
-    LOG_D << "response to INVITE" << ENDL;
     std::shared_ptr<SipSdpMessage> response = sdp;
-    LOG_D << "response: " << response->toPayload() << ENDL;
     response->setHeader(std::string("SIP/2.0 200 OK"));
     response->setTo(std::string(IVR_ACCOUNT_NAME) + "<" + std::string("sip:") + IVR_ACCOUNT_NAME + "@" + _server.getIp() + ">;tag=" + getAppTag());
     response->setContact(std::string("<sip:") + IVR_ACCOUNT_NAME + "@" + _server.getIp() + ":" + std::to_string(_server.getPort()) + ">");
-    LOG_D << "response: " << response->toPayload() << ENDL;
 
     response->setRtpHost(_app_ip);
     response->setRtpPort(_app_port);
@@ -125,7 +120,25 @@ void Application::OnUnavailable(std::shared_ptr<SipMessage> data)
 
 void Application::OnBye(std::shared_ptr<SipMessage> data)
 {
+    LOG_I << data->toPayload() << ENDL;
+    std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getCallID());
+    if (callSession) {
+        // Send 200 OK response
+        std::shared_ptr<SipMessage> response = data;
+        response->setHeader(std::string("SIP/2.0 200 OK"));
+        sendToServer(response);
 
+        // Remove all related sessions
+        callSession->setState(CallSession::State::Bye);
+        std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
+        SessionManager::getInstance()->removeSession(callSession);
+        if (mediaSession) {
+            MediaSessionManager::getInstance()->stopMediaSession(mediaSession);
+            MediaSessionManager::getInstance()->removeSession(mediaSession);
+        } else {
+            LOG_E << "MediaSession not found" << ENDL;
+        }
+    }
 }
 
 
@@ -133,18 +146,9 @@ void Application::OnOk(std::shared_ptr<SipMessage> data)
 {
     LOG_I << ENDL;
     std::string cSqe = data->getCSeq();
-    LOG_D << "cSqe: " << cSqe << ENDL;
     if (cSqe.find("REGISTER") != std::string::npos) {
         LOG_D << "Register successed" << ENDL;
-    }
-    else if (cSqe.find("INVITE") != std::string::npos) {
-        // setCallState(data->getCallID(), Session::State::Ok);
-    }
-    else if (cSqe.find("BYE") != std::string::npos) {
-        // setCallState(data->getCallID(), Session::State::Ok);
-        // endHandle(data->getToNumber(), data);
-    }
-    else {
+    } else {
         LOG_D << "Unknown OK message" << ENDL;
     }
 }
@@ -152,6 +156,16 @@ void Application::OnOk(std::shared_ptr<SipMessage> data)
 void Application::OnAck(std::shared_ptr<SipMessage> data)
 {
     LOG_I << "OnAck: " << ENDL;
+    std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getCallID());
+    if (callSession) {
+        callSession->setState(CallSession::State::Connected);
+        std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
+        if (mediaSession) {
+            MediaSessionManager::getInstance()->startMediaSession(mediaSession);
+        } else {
+            LOG_E << "MediaSession not found" << ENDL;
+        }
+    }
 }
 
 std::string Application::getAppTag()

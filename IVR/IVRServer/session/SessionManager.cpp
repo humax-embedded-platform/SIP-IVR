@@ -26,13 +26,13 @@ std::shared_ptr<CallSession> SessionManager::getSession(std::string callID)
     return nullptr;
 }
 
-std::shared_ptr<CallSession> SessionManager::createSession(std::string callerNumber, std::string callID)
+std::shared_ptr<CallSession> SessionManager::createSession(std::string callID)
 {
-    LOG_D << "Creating session for caller: " << callerNumber << " callID: " << callID << ENDL;
-    if (_sessionMap.find(callerNumber) == _sessionMap.end())
+    LOG_D << "Creating session for callID: " << callID << ENDL;
+    if (_sessionMap.find(callID) == _sessionMap.end())
     {
         std::shared_ptr<CallSession> session(new CallSession(callID));
-        _sessionMap[callerNumber] = session;
+        _sessionMap[callID] = session;
         return session;
     } else {
         LOG_E << "Session already exists" << ENDL;
@@ -47,6 +47,12 @@ void SessionManager::removeSession(std::string callID)
         _sessionMap.erase(callID);
     }
 }
+
+void SessionManager::removeSession(std::shared_ptr<CallSession> session)
+{
+    removeSession(session->getCallID());
+}
+
 
 void SessionManager::dumpSessions()
 {

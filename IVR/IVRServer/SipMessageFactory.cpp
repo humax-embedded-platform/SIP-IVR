@@ -6,18 +6,15 @@
 
 std::optional<std::shared_ptr<SipMessage>> SipMessageFactory::createMessage(std::string message)
 {
-	// std::cout << "Creating SIP message: " << message << std::endl;
 	try
 	{
 		if (containsSdp(message))
 		{
             auto msg = std::make_shared<SipSdpMessage>(std::move(message));
-			// LOG_D << "msg: " << msg->dump() << ENDL;
 			return msg;
 		}
 
-        auto msg = std::make_shared<SipSdpMessage>(std::move(message));
-		// LOG_D << "msg: " << msg->dump() << ENDL;
+        auto msg = std::make_shared<SipMessage>(std::move(message));
 		return msg;
 	}
 	catch (const std::exception&)

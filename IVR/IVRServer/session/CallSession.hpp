@@ -36,6 +36,7 @@ public:
     std::string getToTag() const;
     void setToTag(std::string toTag);
 
+    std::shared_ptr<MediaSession> getMediaSession();
     void setMediaSession(std::shared_ptr<MediaSession> mediaSession);
 
     std::string toString();

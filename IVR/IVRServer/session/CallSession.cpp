@@ -63,6 +63,11 @@ void CallSession::setToTag(std::string toTag)
     _toTag = toTag;
 }
 
+std::shared_ptr<MediaSession> CallSession::getMediaSession()
+{
+    return _mediaSession;
+}
+
 void CallSession::setMediaSession(std::shared_ptr<MediaSession> mediaSession)
 {
     _mediaSession = mediaSession;
