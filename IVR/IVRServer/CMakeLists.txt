@@ -14,6 +14,9 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 # find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
 # find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
+#include another CMakeLists.txt
+add_subdirectory(media-server)
+
 # add header dir
 include_directories(.)
 include_directories(./model)

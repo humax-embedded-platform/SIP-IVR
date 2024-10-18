@@ -32,11 +32,10 @@ int SipSdpMessage::getRtpPort() const
 
 std::string SipSdpMessage::toPayload()
 {
-    LOG_D << "SipSdpMessage::toPayload" << ENDL;
     std::string msg = std::string("v=0") + SipMessageHeaders::HEADERS_DELIMETER +
                  "o=Z 0 20528078 IN IP4 " + _rtpHost + SipMessageHeaders::HEADERS_DELIMETER +
                  "s=Z" + SipMessageHeaders::HEADERS_DELIMETER +
-                 "c=IN IP4 " + std::to_string(_rtpPort) + SipMessageHeaders::HEADERS_DELIMETER +
+                 "c=IN IP4 " + _rtpHost + SipMessageHeaders::HEADERS_DELIMETER +
                  "t=0 0" + SipMessageHeaders::HEADERS_DELIMETER +
                  "m=audio " + std::to_string(_rtpPort) + " RTP/AVP 106 9 98 101 0 8 3" + SipMessageHeaders::HEADERS_DELIMETER +
                  "a=rtpmap:106 opus/48000/2" + SipMessageHeaders::HEADERS_DELIMETER +

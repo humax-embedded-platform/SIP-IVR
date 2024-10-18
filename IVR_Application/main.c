@@ -103,7 +103,7 @@ static void on_incoming_call(pjsua_acc_id acc_id, pjsua_call_id call_id, pjsip_r
     }
 
     // Play a prompt (for example, a WAV file saying "Please press 1 for sales, 2 for support")
-    play_prompt(call_id, "media/welcom.wav");
+    play_prompt(call_id, "media/welcome.wav");
 }
 
 #define MAX_DIGITS 10

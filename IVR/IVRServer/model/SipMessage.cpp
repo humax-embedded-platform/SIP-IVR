@@ -183,7 +183,6 @@ void SipMessage::setContentType(std::string value)
 
 std::string SipMessage::toPayload()
 {
-    LOG_D  << "SipMessage::toPayload" << ENDL;
     std::string message = _header + SipMessageHeaders::HEADERS_DELIMETER + \
                           SipMessageHeaders::VIA + ": " + _via + SipMessageHeaders::HEADERS_DELIMETER + \
                           SipMessageHeaders::FROM + ": " + _from + SipMessageHeaders::HEADERS_DELIMETER + \

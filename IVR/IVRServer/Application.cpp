@@ -120,7 +120,7 @@ void Application::OnUnavailable(std::shared_ptr<SipMessage> data)
 
 void Application::OnBye(std::shared_ptr<SipMessage> data)
 {
-    LOG_I << data->toPayload() << ENDL;
+    LOG_I << ENDL;
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getCallID());
     if (callSession) {
         // Send 200 OK response
@@ -158,13 +158,13 @@ void Application::OnAck(std::shared_ptr<SipMessage> data)
     LOG_I << "OnAck: " << ENDL;
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getCallID());
     if (callSession) {
-        callSession->setState(CallSession::State::Connected);
-        std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
-        if (mediaSession) {
-            MediaSessionManager::getInstance()->startMediaSession(mediaSession);
-        } else {
-            LOG_E << "MediaSession not found" << ENDL;
-        }
+        // callSession->setState(CallSession::State::Connected);
+        // std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
+        // if (mediaSession) {
+        //     MediaSessionManager::getInstance()->startMediaSession(mediaSession);
+        // } else {
+        //     LOG_E << "MediaSession not found" << ENDL;
+        // }
     }
 }
 
