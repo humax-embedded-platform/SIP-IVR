@@ -30,7 +30,7 @@ add_executable(IVRServer
   UdpClient.hpp UdpClient.cpp
   CallDetails.h CallDetails.cpp
   SipClient.hpp SipClient.cpp
-  media/MediaServer.h media/MediaServer.cpp
+
   helpers/cxxopts.hpp helpers/IDGen.hpp helpers/Log.hpp
   SipMessageTypes.h
   SipMessageHeaders.h

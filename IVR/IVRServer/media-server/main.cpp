@@ -1,7 +1,9 @@
 #include <gst/gst.h>
 #include <iostream>
+#include "MediaServer.h"
 
 int main(int argc, char *argv[]) {
+    /*
     // Initialize GStreamer
     gst_init(&argc, &argv);
 
@@ -74,6 +76,8 @@ int main(int argc, char *argv[]) {
     gst_object_unref(bus);
     gst_element_set_state(pipeline, GST_STATE_NULL);
     gst_object_unref(pipeline);
+    */
 
+    MediaServer server(DEFAULT_PORT);
     return 0;
 }

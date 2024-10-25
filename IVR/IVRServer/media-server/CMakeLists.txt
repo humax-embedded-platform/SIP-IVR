@@ -19,6 +19,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include_directories(.)
+include_directories(./include)
+
 # find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
 # find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 find_package(PkgConfig REQUIRED)
@@ -51,6 +54,10 @@ set(LIBS
 
 add_executable(MediaServer
   main.cpp
+  MediaServer.h MediaServer.cpp
+  RequestHandler.h RequestHandler.cpp
+  SessionManager.h SessionManager.cpp
+  MediaSession.h MediaSession.cpp
 )
 
 target_link_libraries(MediaServer ${LIBS})
