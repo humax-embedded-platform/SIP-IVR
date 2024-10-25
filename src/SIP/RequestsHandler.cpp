@@ -6,6 +6,9 @@
 #include "Log.hpp"
 #include "SipMessageFactory.hpp"
 
+#define TEST_CALLER_IP "192.168.0.6"
+#define TEST_CALLER_PORT "77777"
+
 RequestsHandler::RequestsHandler(std::string serverIp, int serverPort,
     OnHandledEvent onHandledEvent) :
     _serverIp(std::move(serverIp)), _serverPort(serverPort),
@@ -196,7 +199,7 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> data)
     char response[BUFFER_SIZE];
     snprintf(response, BUFFER_SIZE,
              "SIP/2.0 202 Accepted\r\n"
-             "Via: SIP/2.0/UDP 192.168.0.9:50538;branch=z9hG4bK1234\r\n"
+             "Via: SIP/2.0/UDP " TEST_CALLER_IP ":"TEST_CALLER_PORT";branch=z9hG4bK1234\r\n"
              "From: <sip:phongivr@192.168.0.4>\r\n"
              "To: <sip:phong1@192.168.0.4>\r\n"
              "Call-ID: %s\r\n"
@@ -213,9 +216,9 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> data)
     char invite[BUFFER_SIZE];
     snprintf(invite, BUFFER_SIZE,
                 "INVITE sip:phong2@192.168.0.4;transport=UDP SIP/2.0\r\n"
-                "Via: SIP/2.0/UDP 192.168.0.9:50538;branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n"
+                "Via: SIP/2.0/UDP "TEST_CALLER_IP ":" TEST_CALLER_PORT ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n"
                 "Max-Forwards: 70\r\n"
-                "Contact: <sip:phong1@192.168.0.9:50538;transport=UDP>\r\n"
+                "Contact: <sip:phong1@"TEST_CALLER_IP":"TEST_CALLER_PORT";transport=UDP>\r\n"
                 "To: <sip:phong2@192.168.0.4>\r\n"
                 "From: <sip:phong1@192.168.0.4;transport=UDP>;tag=%s\r\n"
                 "Call-ID: %s\r\n"
@@ -228,12 +231,12 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> data)
                 "Content-Length: 338\r\n"
                 "\r\n"
                 "v=0\r\n"
-                "o=- 7223043 7223302 IN IP4 192.168.0.9\r\n"
+                "o=- 7223043 7223302 IN IP4 "TEST_CALLER_IP"\r\n"
                 "s=eyeBeam\r\n"
-                "c=IN IP4 192.168.0.9\r\n"
+                "c=IN IP4 "TEST_CALLER_IP"\r\n"
                 "t=0 0\r\n"
                 "m=audio %d RTP/AVP 100 6 0 8 3 18 5 101\r\n"
-                "a=alt:1 1 : 03CBAE4D 00000018 192.168.0.9 %d\r\n"
+                "a=alt:1 1 : 03CBAE4D 00000018 "TEST_CALLER_IP" %d\r\n"
                 "a=fmtp:101 0-15\r\n"
                 "a=rtpmap:100 speex/16000\r\n"
                 "a=rtpmap:101 telephone-event/8000\r\n"
