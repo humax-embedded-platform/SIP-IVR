@@ -29,12 +29,14 @@ pkg_check_modules(GLIB REQUIRED glib-2.0)
 pkg_check_modules(GST REQUIRED gstreamer-1.0)
 pkg_check_modules(GSTRTP REQUIRED gstreamer-rtp-1.0)
 pkg_check_modules(GSTAUDIO REQUIRED gstreamer-audio-1.0)
+pkg_check_modules(OPENSSL REQUIRED openssl)
 
 link_directories(
     ${GLIB_LIBRARY_DIRS}
     ${GST_LIBRARY_DIRS}
     ${GSTRTP_LIBRARY_DIRS}
     ${GSTAUDIO_LIBRARY_DIRS}
+    ${OPENSSL_LIBRARY_DIRS}
 )
 
 include_directories(
@@ -42,6 +44,7 @@ include_directories(
     ${GST_INCLUDE_DIRS}
     ${GSTRTP_INCLUDE_DIRS}
     ${GSTAUDIO_INCLUDE_DIRS}
+    ${OPENSSL_INCLUDE_DIRS}
 )
 
 set(LIBS
@@ -49,6 +52,7 @@ set(LIBS
     ${GST_LDFLAGS}
     ${GSTRTP_LDFLAGS}
     ${GSTAUDIO_LDFLAGS}
+    ${OPENSSL_LDFLAGS}
     spdlog
 )
 
@@ -58,6 +62,8 @@ add_executable(MediaServer
   RequestHandler.h RequestHandler.cpp
   SessionManager.h SessionManager.cpp
   MediaSession.h MediaSession.cpp
+  util/HashUtil.h util/HashUtil.cpp
+  player/GstPlayer.h player/GstPlayer.cpp
 )
 
 target_link_libraries(MediaServer ${LIBS})

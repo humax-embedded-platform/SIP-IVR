@@ -7,6 +7,7 @@
 #include <thread>
 #include <memory>
 class RequestHandler;
+
 class MediaServer
 {
 public:
@@ -20,7 +21,7 @@ private:
     int _serverFd;
     int _serverPort;
     std::shared_ptr<std::thread> _serverThread;
-    RequestHandler _requestHandler;
+    std::shared_ptr<RequestHandler> _requestHandler;
 };
 
 #endif // MEDIASERVER_H

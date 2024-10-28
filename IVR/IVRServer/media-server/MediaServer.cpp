@@ -9,6 +9,7 @@
 
 MediaServer::MediaServer(int port) : _serverPort(port)
 {
+    _requestHandler = std::make_shared<RequestHandler>();
     spdlog::info("Creating server ...");
     std::thread t(&MediaServer::startServer, this);
     t.join();
@@ -61,8 +62,6 @@ void MediaServer::startServer()
             return;
         }
 
-        spdlog::info("Connection accepted!");
-
         std::thread client_thread(&MediaServer::handleConnection, this, new_socket);
         client_thread.detach();
     }
@@ -74,9 +73,11 @@ void MediaServer::handleConnection(int clientFd)
 {
     char buffer[1024] = {0};
     int valRead = read(clientFd, buffer, 1024);
-    spdlog::info("Received: {}", buffer);
-
-    _requestHandler.handleRequest(clientFd, buffer, valRead);
+    if (valRead < 0) {
+        spdlog::error("Read failed");
+        return;
+    }
+    _requestHandler->handleRequest(clientFd, buffer, valRead);
 
     // Close the client socket
     close(clientFd);
