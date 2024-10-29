@@ -30,6 +30,11 @@ int SipSdpMessage::getRtpPort() const
 	return _rtpPort;
 }
 
+std::string SipSdpMessage::mediaDescription() const
+{
+    return _mediaDes;
+}
+
 std::string SipSdpMessage::toPayload()
 {
     std::string msg = std::string("v=0") + SipMessageHeaders::HEADERS_DELIMETER +
@@ -66,9 +71,16 @@ void SipSdpMessage::parse()
         if (line.find("m=") != std::string::npos)
 		{
 			_rtpPort = extractRtpPort(std::move(line));
-        } else if (line.find("c=") != std::string::npos)
+        } else if (line.find("c=") == 0)
         {
             _rtpHost = extractRtpHost(std::move(line));
+            LOG_D << "RTP host: " << _rtpHost << ENDL;
+        } else if (line.find("a=rtpmap:") != std::string::npos)
+        {
+            if (_mediaDes.empty()) {
+                _mediaDes = line.substr(line.find("a=rtpmap:") + 2);
+                LOG_D << "Media description: " << _mediaDes << ENDL;
+            }
         }
 		msg.erase(0, pos + std::strlen(SipMessageHeaders::HEADERS_DELIMETER));
 	}

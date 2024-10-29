@@ -1,35 +1,34 @@
-#include "MediaSessionManager.h"
+#include "MediaManager.h"
 #include "MediaSession.h"
+#include "MediaClient.h"
 
-static MediaSessionManager *instance = nullptr;
+static MediaManager *instance = nullptr;
 
-MediaSessionManager::MediaSessionManager() {}
+MediaManager::MediaManager() {
+    _mediaClient = std::make_shared<MediaClient>();
+}
 
-MediaSessionManager *MediaSessionManager::getInstance()
+MediaManager *MediaManager::getInstance()
 {
     if (instance == nullptr)
     {
-        instance = new MediaSessionManager();
+        instance = new MediaManager();
     }
     return instance;
 }
 
-std::shared_ptr<MediaSession> MediaSessionManager::createSession(std::string clientIp, int clientRtpPort)
+std::shared_ptr<MediaSession> MediaManager::createSession(std::string clientIp, int clientRtpPort, std::string mediaDesc)
 {
-    std::string sessionID = MediaSession::generateSessionID(clientIp, clientRtpPort);
-    LOG_D << "Creating session: " << sessionID << ENDL;
-    if (_sessionMap.find(sessionID) != _sessionMap.end())
-    {
-        LOG_D << "Session already exists" << ENDL;
-        return nullptr;
+    LOG_D << "Creating media session: " << clientIp << ":" << clientRtpPort << ENDL;
+    std::shared_ptr<MediaSession> mediaSession(new MediaSession(clientIp, clientRtpPort, mediaDesc));
+    if (_mediaClient->initSession(mediaSession)) {
+        _sessionMap[mediaSession->getSessionID()] = mediaSession;
+        return mediaSession;
     }
-
-    std::shared_ptr<MediaSession> mediaSession(new MediaSession(clientIp, clientRtpPort));
-    _sessionMap[sessionID] = mediaSession;
-    return mediaSession;
+    return nullptr;
 }
 
-void MediaSessionManager::removeSession(std::shared_ptr<MediaSession> mediaSession)
+void MediaManager::removeSession(std::shared_ptr<MediaSession> mediaSession)
 {
     if (mediaSession )
     {
@@ -42,14 +41,16 @@ void MediaSessionManager::removeSession(std::shared_ptr<MediaSession> mediaSessi
     }
 }
 
-bool MediaSessionManager::startMediaSession(std::shared_ptr<MediaSession> mediaSession)
+bool MediaManager::startMediaSession(std::shared_ptr<MediaSession> mediaSession)
 {
     LOG_D << "Starting media session" << ENDL;
+    _mediaClient->startSession(mediaSession);
     return true;
 }
 
-bool MediaSessionManager::stopMediaSession(std::shared_ptr<MediaSession> mediaSession)
+bool MediaManager::stopMediaSession(std::shared_ptr<MediaSession> mediaSession)
 {
     LOG_D << "Stopping media session" << ENDL;
+    _mediaClient->stopSession(mediaSession);
     return true;
 }

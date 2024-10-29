@@ -20,7 +20,9 @@ add_subdirectory(media-server)
 # add header dir
 include_directories(.)
 include_directories(./model)
+include_directories(./media)
 include_directories(./helpers)
+include_directories(./include)
 
 add_executable(IVRServer
   main.cpp
@@ -37,9 +39,10 @@ add_executable(IVRServer
   session/SessionManager.h session/SessionManager.cpp
   session/CallSession.hpp session/CallSession.cpp
   media/MediaSession.h media/MediaSession.cpp
-  media/MediaSessionManager.h media/MediaSessionManager.cpp
+  media/MediaManager.h media/MediaManager.cpp
   SipMessageFactory.cpp SipMessageFactory.hpp
   AppDefines.h
+  media/MediaClient.h media/MediaClient.cpp
 )
 
 # target_link_libraries(IVRServer Qt${QT_VERSION_MAJOR}::Core)

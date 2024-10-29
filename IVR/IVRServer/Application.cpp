@@ -6,7 +6,7 @@
 #include "session/CallSession.hpp"
 #include "session/SessionManager.h"
 #include "media/MediaSession.h"
-#include "media/MediaSessionManager.h"
+#include "media/MediaManager.h"
 
 
 Application::Application(std::string server_ip, int server_port, std::string app_ip, int app_port)
@@ -73,18 +73,24 @@ void Application::onReqTerminated(std::shared_ptr<SipMessage> data)
 
 void Application::OnInvite(std::shared_ptr<SipMessage> data)
 {
-    LOG_I << ENDL;
     std::shared_ptr<SipSdpMessage> sdp = std::dynamic_pointer_cast<SipSdpMessage>(data);
     std::string callID = sdp->getCallID();
+    LOG_I << "Call ID: " << callID << ENDL;
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(callID);
     if (callSession) {
         LOG_D << "Session already exists" << ENDL;
         return;
     } else {
         callSession = SessionManager::getInstance()->createSession(callID);
-        std::shared_ptr<MediaSession> mediaSession = MediaSessionManager::getInstance()->createSession(sdp->getRtpHost(), sdp->getRtpPort());
-        callSession->setMediaSession(mediaSession);
-        callSession->setState(CallSession::State::Connected);
+        std::shared_ptr<MediaSession> mediaSession = MediaManager::getInstance()->createSession(sdp->getRtpHost(), sdp->getRtpPort(), sdp->mediaDescription());
+        if (mediaSession) {
+            callSession->setMediaSession(mediaSession);
+            callSession->setState(CallSession::State::Connected);
+        } else {
+            LOG_E << "Failed to create media session -> remove session" << ENDL;
+            SessionManager::getInstance()->removeSession(callSession);
+            return;
+        }
     }
 
     // response to INVITE
@@ -133,8 +139,8 @@ void Application::OnBye(std::shared_ptr<SipMessage> data)
         std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
         SessionManager::getInstance()->removeSession(callSession);
         if (mediaSession) {
-            MediaSessionManager::getInstance()->stopMediaSession(mediaSession);
-            MediaSessionManager::getInstance()->removeSession(mediaSession);
+            MediaManager::getInstance()->stopMediaSession(mediaSession);
+            MediaManager::getInstance()->removeSession(mediaSession);
         } else {
             LOG_E << "MediaSession not found" << ENDL;
         }
@@ -158,13 +164,14 @@ void Application::OnAck(std::shared_ptr<SipMessage> data)
     LOG_I << "OnAck: " << ENDL;
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getCallID());
     if (callSession) {
-        // callSession->setState(CallSession::State::Connected);
-        // std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
-        // if (mediaSession) {
-        //     MediaSessionManager::getInstance()->startMediaSession(mediaSession);
-        // } else {
-        //     LOG_E << "MediaSession not found" << ENDL;
-        // }
+        callSession->setState(CallSession::State::Connected);
+        std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
+        if (mediaSession) {
+            mediaSession->setPbSourceFile("~/WorkSpace/SipServer/IVR_Application/media/welcome.wav");
+            MediaManager::getInstance()->startMediaSession(mediaSession);
+        } else {
+            LOG_E << "MediaSession not found" << ENDL;
+        }
     }
 }
 

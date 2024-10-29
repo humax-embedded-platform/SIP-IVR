@@ -15,6 +15,8 @@ public:
     std::string getRtpHost() const;
 	int getRtpPort() const;
 
+    std::string mediaDescription() const;
+
     std::string toPayload() override;
 
 private:
@@ -24,6 +26,7 @@ private:
 
     std::string _rtpHost;
 	int _rtpPort;
+    std::string _mediaDes;
 };
 
 #endif

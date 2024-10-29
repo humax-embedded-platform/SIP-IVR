@@ -1,18 +1,49 @@
 #include "MediaSession.h"
 
-MediaSession::MediaSession(std::string clientIp, int clientRtpPort) :
+MediaSession::MediaSession(std::string clientIp, int clientRtpPort, std::string mediaDesc) :
     _clientIp(clientIp),
-    _clientRtpPort(clientRtpPort)
+    _clientRtpPort(clientRtpPort),
+    _mediaDes(mediaDesc)
 {
     LOG_I << "MediaSession created for client: " << clientIp << ":" << clientRtpPort << ENDL;
 }
 
-std::string MediaSession::getSessionID() const
+std::string MediaSession::remoteHost()
 {
-    return generateSessionID(_clientIp, _clientRtpPort);
+    return _clientIp;
 }
 
-std::string MediaSession::generateSessionID(std::string clientIp, int clientRtpPort)
+int MediaSession::remotePort()
 {
-    return clientIp + ":" + std::to_string(clientRtpPort);
+    return _clientRtpPort;
+}
+
+std::string MediaSession::getSessionID() const
+{
+    return _sessionID;
+}
+
+void MediaSession::setSessionID(std::string sessionID)
+{
+    _sessionID = sessionID;
+}
+
+std::string MediaSession::getPbSourceFile() const
+{
+    return _pbSourceFile;
+}
+
+void MediaSession::setPbSourceFile(std::string pbSourceFile)
+{
+    _pbSourceFile = pbSourceFile;
+}
+
+
+void MediaSession::setMediaDescription(std::string mediaDescription) {
+    _mediaDes = mediaDescription;
+}
+
+std::string MediaSession::getMediaDescription() const
+{
+    return _mediaDes;
 }
