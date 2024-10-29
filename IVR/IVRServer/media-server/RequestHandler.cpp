@@ -40,6 +40,17 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
             res.error = "Failed to create session";
             return;
         } else {
+            if (data.contains(REMOTE_MEDIA_DESC)) {
+                std::string mediaDesc = data[REMOTE_MEDIA_DESC];
+                session->setMediaDescription(mediaDesc);
+            }
+
+            if (data.contains(PLAYBACK_SOURCE)) {
+                std::string pbSource = data[PLAYBACK_SOURCE];
+                session->setPBSourceFile(pbSource);
+            }
+            session->open();
+
             res.success = true;
             res.type = req.type;
             res.sessionID = session->sessionID();
@@ -66,6 +77,55 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
         res.sessionID = req.sessionID;
         res.data = "Session started";
         sendResponse(conectionFd, res);
+    } else if (req.type == REQUEST_TYPE_STOP_SESSION) {
+        spdlog::info("Handling stop_session request ...{}", req.sessionID);
+        auto _sessionManager = SessionManager::getInstance();
+        std::shared_ptr<MediaSession> session = _sessionManager->getSession(req.sessionID);
+        Response res;
+        if (session == nullptr) {
+            res.success = false;
+            res.type = req.type;
+            res.sessionID = req.sessionID;
+            res.error = "Session not found";
+            sendResponse(conectionFd, res);
+            return;
+        }
+
+        // stop session
+        session->stop();
+        res.success = true;
+        res.type = req.type;
+        res.sessionID = req.sessionID;
+        res.data = "Session stopped";
+        sendResponse(conectionFd, res);
+    } else if (req.type == REQUEST_TYPE_UPDATE_SESSION) {
+        spdlog::info("Handling update_session request ...{}", req.sessionID);
+        auto _sessionManager = SessionManager::getInstance();
+        std::shared_ptr<MediaSession> session = _sessionManager->getSession(req.sessionID);
+        Response res;
+        if (session == nullptr) {
+            res.success = false;
+            res.type = req.type;
+            res.sessionID = req.sessionID;
+            res.error = "Session not found";
+            sendResponse(conectionFd, res);
+            return;
+        }
+
+        json data = json::parse(req.data);
+        if (data.contains(REMOTE_MEDIA_DESC)) {
+            session->setMediaDescription(data[REMOTE_MEDIA_DESC]);
+        }
+
+        if (data.contains(PLAYBACK_SOURCE)) {
+            session->setPBSourceFile(data[PLAYBACK_SOURCE]);
+        }
+
+        res.success = true;
+        res.type = req.type;
+        res.sessionID = req.sessionID;
+        res.data = "Session updated";
+        sendResponse(conectionFd, res);
     } else if (req.type == REQUEST_TYPE_CLOSE_SESSION) {
         spdlog::info("Handling close_session request ...{}", req.sessionID);
         auto _sessionManager = SessionManager::getInstance();
@@ -79,8 +139,7 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
             sendResponse(conectionFd, res);
             return;
         }
-        // stop session
-        session->stop();
+
         _sessionManager->removeSession(req.sessionID);
         res.success = true;
         res.type = req.type;

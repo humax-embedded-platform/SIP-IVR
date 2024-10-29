@@ -9,12 +9,9 @@ MediaSession::MediaSession(std::string remoteHost, int remotePort, int localPort
     _localPort(localPort) {
     // generate session ID as md5 hash of remote host and port
     _sessionID = HashUtil::generateMD5(remoteHost + std::to_string(remotePort));
-
     _player = std::make_shared<GstPlayer>();
-    _player->setRtpHost(remoteHost);
-    _player->setRtpPort(remotePort);
-    _player->open();
-
+    _player->setRtpHost(_remoteHost);
+    _player->setRtpPort(_remotePort);
     spdlog::info("Created session with ID {}", _sessionID);
 }
 
@@ -38,12 +35,45 @@ int MediaSession::localPort() const
     return _localPort;
 }
 
+void MediaSession::setPBSourceFile(std::string sourceFile)
+{
+    _player->setPBSourceFile(sourceFile);
+}
+
+void MediaSession::setMediaDescription(std::string sdp)
+{
+    // if spd start with rtpmap: extract payload type, codec and sample rate
+    if (sdp.find("rtpmap:") != std::string::npos) {
+        auto rtpmap = sdp.substr(sdp.find("rtpmap:") + 7);
+        auto payloadType = rtpmap.substr(0, rtpmap.find(" "));
+        rtpmap = rtpmap.substr(rtpmap.find(" ") + 1);
+        auto codec = rtpmap.substr(0, rtpmap.find("/"));
+        rtpmap = rtpmap.substr(rtpmap.find("/") + 1);
+        auto sampleRate = rtpmap.substr(0, rtpmap.find("/"));
+
+        _player->setPayloadType(std::stoi(payloadType));
+        _player->setCodec(codec);
+        _player->setSampleRate(std::stoi(sampleRate));
+        spdlog::info("Media description set: payloadType: {}, codec: {}, sampleRate: {}", payloadType, codec, sampleRate);
+    }
+}
+
+bool MediaSession::open()
+{
+    return _player->open();
+}
+
 bool MediaSession::start()
 {
-    _player->start();
+    return _player->start();
 }
 
 bool MediaSession::stop()
 {
-    _player->stop();
+    return _player->stop();
+}
+
+bool MediaSession::close()
+{
+    return _player->close();
 }

@@ -15,8 +15,13 @@ public:
     int remotePort() const;
     int localPort() const;
 
+    void setPBSourceFile(std::string sourceFile);
+    void setMediaDescription(std::string sdp);
+
+    bool open();
     bool start();
     bool stop();
+    bool close();
 private:
     std::string _sessionID;
     int _localPort;

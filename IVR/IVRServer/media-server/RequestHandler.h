@@ -11,10 +11,15 @@
 
 #define REMOTE_HOST "remote_host"
 #define REMOTE_PORT "remote_port"
+#define REMOTE_MEDIA_DESC "remote_media_desc"
+#define PLAYBACK_SOURCE "playback_source"
 
 #define REQUEST_TYPE_INIT_SESSION "init_session"
 #define REQUEST_TYPE_START_SESSION "start_session"
+#define REQUEST_TYPE_STOP_SESSION "stop_session"
 #define REQUEST_TYPE_CLOSE_SESSION "close_session"
+#define REQUEST_TYPE_UPDATE_SESSION "update_session"
+
 
 typedef struct Request {
     std::string type;
