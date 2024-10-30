@@ -14,6 +14,7 @@ public:
     GThread* _thread;
     GMainLoop* _loop;
     GMainContext* _context;
+    GstBus* _bus;
     GMutex _lock;
     GCond _cond;
 };

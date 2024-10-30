@@ -1,8 +1,8 @@
 #include "GstBasePlayer.h"
 
-GstBasePlayer::GstBasePlayer() : {
+GstBasePlayer::GstBasePlayer() {
     _isOpened = false;
-    _context = new GstPlayerContext();
+    _context = std::make_shared<GstPlayerContext>();
 }
 
 bool GstBasePlayer::open()
@@ -35,15 +35,15 @@ bool GstBasePlayer::stop()
 bool GstBasePlayer::close()
 {
     if (!isOpened()) {
-        return;
+        return false;
     }
 
-    _isOpened = false;
     INVOKE_WITH_MAIN_CONTEXT_DEFAULT(_context->_context, closeOnMainCtx, this);
-    while (_context->_loop) {
+    while (_context->_loop && g_main_loop_is_running(_context->_loop)) {
         spdlog::info("Waiting for player thread to stop ...");
         g_usleep(1000000); //sleep for 1 second
     }
+    _isOpened = false;
     return true;
 }
 
@@ -61,10 +61,15 @@ gpointer GstBasePlayer::onBasePlayerThreadStarted(gpointer data)
     g_main_context_push_thread_default(player->_context->_context);
 
     player->initPipeline();
+    player->_context->_bus = gst_pipeline_get_bus (GST_PIPELINE (player->_context->_pipeline));
+    if(player->_context->_bus != nullptr){
+        gst_bus_add_watch (player->_context->_bus, busCallback, player);
+    }
+
 
     GSource* source = g_idle_source_new();
-    g_source_set_callback(source, (GSourceFunc)onMainLoopStarted, self.get(), NULL);
-    g_source_attach(source, self->mPrivateContext->mMainContext);
+    g_source_set_callback(source, (GSourceFunc)onMainLoopStarted, player, NULL);
+    g_source_attach(source, player->_context->_context);
     g_source_unref(source);
 
     player->onPlayerThreadStarted(data);
@@ -77,6 +82,10 @@ gpointer GstBasePlayer::onBasePlayerThreadStarted(gpointer data)
     while (g_main_context_iteration(player->_context->_context, FALSE)) {}
     g_main_context_pop_thread_default(player->_context->_context);
     MUTEX_UNLOCK(&player->_context->_lock);
+
+    if (player->_context->_bus) {
+        gst_bus_remove_watch(player->_context->_bus);
+    }
 
     g_main_loop_unref(player->_context->_loop);
     player->_context->_loop = nullptr;
@@ -119,12 +128,21 @@ gboolean GstBasePlayer::stopOnMainCtx(gpointer data)
 
 gboolean GstBasePlayer::closeOnMainCtx(gpointer data)
 {
+    spdlog::info("Closing ...");
     GstBasePlayer* player = (GstBasePlayer*)data;
     if (!player->isOpened()) {
+        spdlog::error("Player is not opened");
         return G_SOURCE_REMOVE;
     }
 
     if (player->_context->_loop && g_main_loop_is_running(player->_context->_loop)) {
         g_main_loop_quit(player->_context->_loop);
     }
+    return G_SOURCE_REMOVE;
+}
+
+gboolean GstBasePlayer::busCallback(GstBus *bus, GstMessage *message, gpointer data)
+{
+    GstBasePlayer* player = (GstBasePlayer*)data;
+    return player->onBusCallback(bus, message, data);
 }

@@ -20,6 +20,7 @@ public:
     GstBasePlayer();
 
     virtual gpointer onPlayerThreadStarted(gpointer data) = 0;
+    virtual gboolean onBusCallback(GstBus *bus, GstMessage *message, gpointer data) = 0;
     virtual void initPipeline() = 0;
     virtual void destroyPipeline() = 0;
     virtual bool open();
@@ -35,6 +36,7 @@ private:
     static gboolean playOnMainCtx(gpointer data);
     static gboolean stopOnMainCtx(gpointer data);
     static gboolean closeOnMainCtx(gpointer data);
+    static gboolean busCallback(GstBus *bus, GstMessage *message, gpointer data);
 
 protected:
     std::shared_ptr<GstPlayerContext> _context;

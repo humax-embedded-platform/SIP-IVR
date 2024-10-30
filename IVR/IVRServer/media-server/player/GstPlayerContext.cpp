@@ -4,7 +4,8 @@ GstPlayerContext::GstPlayerContext() :
     _pipeline(nullptr),
     _thread(nullptr),
     _loop(nullptr),
-    _context(nullptr)
+    _context(nullptr),
+    _bus(nullptr)
 {
     g_mutex_init(&_lock);
     g_cond_init(&_cond);

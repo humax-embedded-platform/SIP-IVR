@@ -4,7 +4,10 @@
 #include <string>
 #include <gst/gst.h>
 #include "GstPlayerContext.h"
+#include <memory>
 
+class GstSenderPlayer;
+class GstReceiverPlayer;
 class GstPlayer
 {
 public:
@@ -24,9 +27,8 @@ public:
     bool close();
 
 private:
-    void initPipeline();
+    void initPlayer();
 
-    static gboolean busCallback(GstBus * bus, GstMessage * message, gpointer data);
 
 private:
     int _rtpPort;
@@ -36,11 +38,8 @@ private:
     int _sampleRate;
     std::string _pbSourceFile;
 
-    GThread* _senderThread;
-    GstElement* _sender_pipeline;
-
-    GThread* _receiverThread;
-    GstElement* _receiver_pipeline;
+    std::shared_ptr<GstSenderPlayer> _senderPlayer;
+    std::shared_ptr<GstReceiverPlayer> _receiverPlayer;
 };
 
 #endif // GSTPLAYER_H
