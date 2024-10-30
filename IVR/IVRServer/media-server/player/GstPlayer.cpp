@@ -1,6 +1,7 @@
 #include "GstPlayer.h"
 #include <gst/gst.h>
 #include <spdlog/spdlog.h>
+#include "util/FileUtil.h"
 
 static bool initialized = false;
 
@@ -14,6 +15,9 @@ GstPlayer::GstPlayer() :
     _sender_pipeline(nullptr),
     _receiver_pipeline(nullptr) {
     if (!initialized) {
+#if 0
+        g_setenv("GST_DEBUG", "4", 1);
+#endif
         gst_init(nullptr, nullptr);
         initialized = true;
     }
@@ -49,14 +53,29 @@ void GstPlayer::setSampleRate(int sampleRate)
 
 void GstPlayer::setPBSourceFile(std::string sourceFile)
 {
-    spdlog::info("Setting playback source file: {}", sourceFile);
-    _pbSourceFile = sourceFile;
-    // if pipeline is playing ->: reset it
+    if (sourceFile.empty()) {
+        spdlog::error("Source file is empty");
+        return;
+    }
+
+    auto absPath = FileUtil::absolutePath(sourceFile);
+    spdlog::info("Setting playback source file: {}", absPath);
+
+    _pbSourceFile = absPath;
 
     if (_sender_pipeline) {
+        GstElement *filesrc = gst_bin_get_by_name(GST_BIN(_sender_pipeline), "source");
+        if (!filesrc) {
+            spdlog::error("Failed to get filesrc element");
+            return;
+        }
+        g_object_set(G_OBJECT(filesrc), "location", _pbSourceFile.c_str(), nullptr);
+        gst_object_unref(filesrc);
+
         GstState state;
         gst_element_get_state(_sender_pipeline, &state, nullptr, GST_CLOCK_TIME_NONE);
         if (state == GST_STATE_PLAYING) {
+            spdlog::info("Resetting pipeline ...");
             gst_element_set_state(_sender_pipeline, GST_STATE_READY);
         }
     }
@@ -111,16 +130,16 @@ void GstPlayer::initPipeline()
         std::string cmd;
 
         // check parameters is missing
-        if (_codec.empty() || _payloadType == 0 || _sampleRate == 0 || _pbSourceFile.empty()) {
+        if (_codec.empty() || _payloadType == 0 || _sampleRate == 0) {
             spdlog::error("Missing parameters");
             return;
         }
 
         if (_codec == "opus") {
-            cmd = std::string("filesrc location=") + _pbSourceFile + " ! wavparse ! audioconvert ! opusenc ! rtpopuspay pt=" +
+            cmd = std::string("filesrc name=source") + _pbSourceFile + " ! wavparse ! audioconvert ! opusenc ! rtpopuspay pt=" +
                   std::to_string(_payloadType) + " ! udpsink host=" + _rtpHost + " port=" + std::to_string(_rtpPort);
         } else if (_codec == "speex") {
-            cmd = std::string("filesrc location=") + _pbSourceFile + " ! wavparse ! audioconvert ! audioresample ! \"audio/x-raw,rate=" + std::to_string(_sampleRate) + "\" ! speexenc ! rtpspeexpay pt=" +
+            cmd = std::string("filesrc name=source") + _pbSourceFile + " ! wavparse ! audioconvert ! audioresample ! audio/x-raw,rate=" + std::to_string(_sampleRate) + " ! speexenc ! rtpspeexpay pt=" +
                   std::to_string(_payloadType) + " ! udpsink host=" + _rtpHost + " port=" + std::to_string(_rtpPort);
         } else {
             spdlog::error("Unsupported codec");
@@ -139,9 +158,9 @@ void GstPlayer::initPipeline()
         }
 
         // set the pipeline to paused
-        GstStateChangeReturn ret = gst_element_set_state(_sender_pipeline, GST_STATE_PAUSED);
+        GstStateChangeReturn ret = gst_element_set_state(_sender_pipeline, GST_STATE_NULL);
         if (ret == GST_STATE_CHANGE_FAILURE) {
-            spdlog::error("Unable to set the pipeline to the paused state");
+            spdlog::error("Unable to set the pipeline to the null state");
             return;
         }
     }

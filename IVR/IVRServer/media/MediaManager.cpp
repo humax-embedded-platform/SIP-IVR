@@ -36,6 +36,7 @@ void MediaManager::removeSession(std::shared_ptr<MediaSession> mediaSession)
         LOG_D << "Removing session: " << sessionID << ENDL;
         if (_sessionMap.find(sessionID) != _sessionMap.end())
         {
+            _mediaClient->closeSession(mediaSession);
             _sessionMap.erase(sessionID);
         }
     }

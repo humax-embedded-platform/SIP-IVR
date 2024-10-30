@@ -71,6 +71,11 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
             return;
         }
         // start session
+        json data = json::parse(req.data);
+        if (data.contains(PLAYBACK_SOURCE)) {
+            std::string pbSource = data[PLAYBACK_SOURCE];
+            session->setPBSourceFile(pbSource);
+        }
         session->start();
         res.success = true;
         res.type = req.type;

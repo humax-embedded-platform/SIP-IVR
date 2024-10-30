@@ -38,10 +38,12 @@ typedef struct Request {
 
     std::string payload() {
         nlohmann::json req;
-        json data_json = json::parse(data);
         req[REQUEST_TYPE] = type;
         req[REQUEST_SESSION] = sessionID;
-        req[REQUEST_DATA] = data_json;
+        if (!data.empty()) {
+            json data_json = json::parse(data);
+            req[REQUEST_DATA] = data_json;
+        }
         return req.dump();
     }
 } Request;
