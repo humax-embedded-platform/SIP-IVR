@@ -65,6 +65,12 @@ add_executable(MediaServer
   util/HashUtil.h util/HashUtil.cpp
   player/GstPlayer.h player/GstPlayer.cpp
   util/FileUtil.h util/FileUtil.cpp
+  player/GstPlayerContext.h
+  player/GstSenderPlayer.h player/GstSenderPlayer.cpp
+  player/GstReceiverPlayer.h player/GstReceiverPlayer.cpp
+  player/GstPlayerContext.cpp
+  player/GstBasePlayer.h player/GstBasePlayer.cpp
+
 )
 
 target_link_libraries(MediaServer ${LIBS})

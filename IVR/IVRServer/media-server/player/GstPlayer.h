@@ -3,6 +3,7 @@
 
 #include <string>
 #include <gst/gst.h>
+#include "GstPlayerContext.h"
 
 class GstPlayer
 {
@@ -35,7 +36,10 @@ private:
     int _sampleRate;
     std::string _pbSourceFile;
 
+    GThread* _senderThread;
     GstElement* _sender_pipeline;
+
+    GThread* _receiverThread;
     GstElement* _receiver_pipeline;
 };
 
