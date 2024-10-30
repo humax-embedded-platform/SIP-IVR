@@ -169,6 +169,24 @@ bool MediaClient::updateSession(std::shared_ptr<MediaSession> session)
     return false;
 }
 
+std::string MediaClient::readDTMF(std::shared_ptr<MediaSession> session)
+{
+    Request req;
+    Response res;
+    req.type = REQUEST_TYPE_GET_DTMF_EVENT;
+    req.sessionID = session->getSessionID();
+    if (!sendRequest(req, res)) {
+        LOG_E << "Failed to send request" << ENDL;
+    } else {
+        if (res.success) {
+            return res.data;
+        } else {
+            LOG_E << "Failed to update session: " << res.error << ENDL;
+        }
+    }
+    return "";
+}
+
 bool MediaClient::sendRequest(Request &req, Response &res)
 {
     LOG_I << "Sending request: " << req.payload() << ENDL;

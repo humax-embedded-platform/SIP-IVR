@@ -28,6 +28,7 @@
 #define REQUEST_TYPE_STOP_SESSION "stop_session"
 #define REQUEST_TYPE_CLOSE_SESSION "close_session"
 #define REQUEST_TYPE_UPDATE_SESSION "update_session"
+#define REQUEST_TYPE_GET_DTMF_EVENT "get_dtmf_event"
 
 using json = nlohmann::json;
 
@@ -88,6 +89,7 @@ public:
     bool stopSession(std::shared_ptr<MediaSession> session);
     bool closeSession(std::shared_ptr<MediaSession> session);
     bool updateSession(std::shared_ptr<MediaSession> session);
+    std::string readDTMF(std::shared_ptr<MediaSession> session);
 
 private:
     bool sendRequest(Request &req, Response &res);

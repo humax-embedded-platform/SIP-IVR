@@ -46,6 +46,7 @@ bool MediaManager::startMediaSession(std::shared_ptr<MediaSession> mediaSession)
 {
     LOG_D << "Starting media session" << ENDL;
     _mediaClient->startSession(mediaSession);
+    mediaSession->startReadDTMF(_mediaClient);
     return true;
 }
 

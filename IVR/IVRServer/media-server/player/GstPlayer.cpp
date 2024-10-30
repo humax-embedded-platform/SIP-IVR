@@ -78,6 +78,7 @@ bool GstPlayer::open()
     }
 
     initPlayer();
+
     if (_senderPlayer) {
         _senderPlayer->open();
     }
@@ -121,9 +122,24 @@ bool GstPlayer::close()
     return true;
 }
 
+std::string GstPlayer::getDTMFEvent()
+{
+    if (_receiverPlayer) {
+        return _receiverPlayer->getDTMFEvent();
+    }
+    return "";
+}
+
+void GstPlayer::clearDTMFEvent()
+{
+    if (_receiverPlayer) {
+        _receiverPlayer->setDTMFEvent("");
+    }
+}
+
 void GstPlayer::initPlayer()
 {
-    spdlog::info("Initializing pipeline ...");
+    spdlog::info("initPlayer");
     if (!_senderPlayer) {
         std::string cmd;
 
@@ -144,9 +160,16 @@ void GstPlayer::initPlayer()
             return;
         }
 
-        spdlog::info("Gstreamer command: {}", cmd);
+        spdlog::info("GstSenderPlayer command: {}", cmd);
         _senderPlayer = std::make_shared<GstSenderPlayer>();
         _senderPlayer->setLaunchCmd(cmd);
+    }
+
+    if (!_receiverPlayer) {
+        _receiverPlayer = std::make_shared<GstReceiverPlayer>();
+        std::string cmd = "rtpbin name=rtpbin  udpsrc name=udpsrc caps=application/x-rtp !  rtpbin.recv_rtp_sink_0 rtpbin.  rtpdtmfdepay name=rtpdtmfdepay ! fakesink name=fakesink";
+        spdlog::info("GstReceiverPlayer command: {}", cmd);
+        _receiverPlayer->setLaunchCmd(cmd);
     }
 }
 

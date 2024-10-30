@@ -43,6 +43,7 @@ add_executable(IVRServer
   SipMessageFactory.cpp SipMessageFactory.hpp
   AppDefines.h
   media/MediaClient.h media/MediaClient.cpp
+  DTMFHandler.h DTMFHandler.cpp
 )
 
 # target_link_libraries(IVRServer Qt${QT_VERSION_MAJOR}::Core)

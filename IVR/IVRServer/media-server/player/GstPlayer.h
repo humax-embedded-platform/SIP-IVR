@@ -26,6 +26,9 @@ public:
     bool stop();
     bool close();
 
+    std::string getDTMFEvent();
+    void clearDTMFEvent();
+
 private:
     void initPlayer();
 

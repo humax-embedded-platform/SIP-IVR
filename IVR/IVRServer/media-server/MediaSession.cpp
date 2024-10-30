@@ -77,3 +77,13 @@ bool MediaSession::close()
 {
     return _player->close();
 }
+
+std::string MediaSession::getDTMFEvent()
+{
+    return _player->getDTMFEvent();
+}
+
+void MediaSession::clearDTMFEvent()
+{
+    _player->clearDTMFEvent();
+}

@@ -40,6 +40,18 @@ std::shared_ptr<CallSession> SessionManager::createSession(std::string callID)
     }
 }
 
+std::shared_ptr<CallSession> SessionManager::findSession(std::shared_ptr<MediaSession> mediaSession)
+{
+    for (auto &session : _sessionMap)
+    {
+        if (session.second->getMediaSession() == mediaSession)
+        {
+            return session.second;
+        }
+    }
+    return nullptr;
+}
+
 void SessionManager::removeSession(std::string callID)
 {
     if (_sessionMap.find(callID) != _sessionMap.end())

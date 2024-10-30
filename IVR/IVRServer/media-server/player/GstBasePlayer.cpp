@@ -5,6 +5,11 @@ GstBasePlayer::GstBasePlayer() {
     _context = std::make_shared<GstPlayerContext>();
 }
 
+GstBasePlayer::~GstBasePlayer()
+{
+
+}
+
 bool GstBasePlayer::open()
 {
     _isOpened = true;
@@ -83,6 +88,8 @@ gpointer GstBasePlayer::onBasePlayerThreadStarted(gpointer data)
     g_main_context_pop_thread_default(player->_context->_context);
     MUTEX_UNLOCK(&player->_context->_lock);
 
+    player->destroyPipeline();
+
     if (player->_context->_bus) {
         gst_bus_remove_watch(player->_context->_bus);
     }
@@ -145,4 +152,10 @@ gboolean GstBasePlayer::busCallback(GstBus *bus, GstMessage *message, gpointer d
 {
     GstBasePlayer* player = (GstBasePlayer*)data;
     return player->onBusCallback(bus, message, data);
+}
+
+
+void GstBasePlayer::setLaunchCmd(const std::string &launchCmd)
+{
+    _launchCmd = launchCmd;
 }

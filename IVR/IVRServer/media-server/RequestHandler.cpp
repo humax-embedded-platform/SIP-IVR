@@ -54,7 +54,7 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
             res.success = true;
             res.type = req.type;
             res.sessionID = session->sessionID();
-            res.data = session->localPort();
+            res.data = session->sessionID();
         }
         sendResponse(conectionFd, res);
     } else if (req.type == REQUEST_TYPE_START_SESSION) {
@@ -151,6 +151,27 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
         res.sessionID = req.sessionID;
         res.data = "Session stopped";
         sendResponse(conectionFd, res);
+    } else if (req.type == REQUEST_TYPE_GET_DTMF_EVENT) {
+        spdlog::info("Handling get_dtmf_event request ...{}", req.sessionID);
+        auto _sessionManager = SessionManager::getInstance();
+        std::shared_ptr<MediaSession> session = _sessionManager->getSession(req.sessionID);
+        Response res;
+        if (session == nullptr) {
+            res.success = false;
+            res.type = req.type;
+            res.sessionID = req.sessionID;
+            res.error = "Session not found";
+            sendResponse(conectionFd, res);
+            return;
+        }
+
+        std::string dtmfEvent = session->getDTMFEvent();
+        res.success = true;
+        res.type = req.type;
+        res.sessionID = req.sessionID;
+        res.data = dtmfEvent;
+        sendResponse(conectionFd, res);
+        session->clearDTMFEvent();
     } else {
         spdlog::error("Invalid request type");
         Response res;

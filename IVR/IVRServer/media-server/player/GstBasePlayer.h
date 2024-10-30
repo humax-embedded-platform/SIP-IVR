@@ -18,6 +18,7 @@ class GstBasePlayer
 {
 public:
     GstBasePlayer();
+    ~GstBasePlayer();
 
     virtual gpointer onPlayerThreadStarted(gpointer data) = 0;
     virtual gboolean onBusCallback(GstBus *bus, GstMessage *message, gpointer data) = 0;
@@ -29,6 +30,7 @@ public:
     virtual bool close();
 
     bool isOpened();
+    void setLaunchCmd(const std::string &launchCmd);
 
 private:
     static gpointer onBasePlayerThreadStarted(gpointer data);
@@ -41,6 +43,7 @@ private:
 protected:
     std::shared_ptr<GstPlayerContext> _context;
     bool _isOpened;
+    std::string _launchCmd;
 };
 
 #endif // GSTBASEPLAYER_H

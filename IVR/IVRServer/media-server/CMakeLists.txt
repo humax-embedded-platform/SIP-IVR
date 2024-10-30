@@ -70,6 +70,7 @@ add_executable(MediaServer
   player/GstReceiverPlayer.h player/GstReceiverPlayer.cpp
   player/GstPlayerContext.cpp
   player/GstBasePlayer.h player/GstBasePlayer.cpp
+  Defines.h
 
 )
 

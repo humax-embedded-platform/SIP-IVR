@@ -1,5 +1,7 @@
 #include "GstSenderPlayer.h"
 
+#define TAG "GstSenderPlayer"
+
 GstSenderPlayer::GstSenderPlayer() : GstBasePlayer() {}
 
 GstSenderPlayer::~GstSenderPlayer()
@@ -9,7 +11,7 @@ GstSenderPlayer::~GstSenderPlayer()
 
 void GstSenderPlayer::initPipeline()
 {
-    spdlog::info("Initializing pipeline");
+    spdlog::info("{}::Initializing pipeline", TAG);
     _context->_pipeline = gst_parse_launch(_launchCmd.c_str(), nullptr);
 
     // set pipeline to NULL state
@@ -19,11 +21,11 @@ void GstSenderPlayer::initPipeline()
 void GstSenderPlayer::destroyPipeline()
 {
     spdlog::info("Destroying pipeline");
-}
-
-void GstSenderPlayer::setLaunchCmd(const std::string &launchCmd)
-{
-    _launchCmd = launchCmd;
+    if (_context->_pipeline) {
+        gst_element_set_state(_context->_pipeline, GST_STATE_NULL);
+        gst_object_unref(_context->_pipeline);
+        _context->_pipeline = nullptr;
+    }
 }
 
 void GstSenderPlayer::setPBSourceFile(const std::string &sourceFile)
@@ -41,7 +43,7 @@ void GstSenderPlayer::setPBSourceFile(const std::string &sourceFile)
 
 gpointer GstSenderPlayer::onPlayerThreadStarted(gpointer data)
 {
-    spdlog::info("Player thread started");
+    spdlog::info("GstSenderPlayer thread started");
     return nullptr;
 }
 
@@ -54,10 +56,10 @@ gboolean GstSenderPlayer::onBusCallback(GstBus *bus, GstMessage *message, gpoint
     switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_STATE_CHANGED:
     {
-        break;
         GstState old_state, new_state, pending_state;
         gst_message_parse_state_changed(message, &old_state, &new_state, &pending_state);
-        spdlog::info("state change to {} from {} with {} pending",
+        spdlog::info("{}'s state change to {} from {} with {} pending",
+                     gst_element_get_name (message->src),
                      gst_element_state_get_name(new_state),
                      gst_element_state_get_name(old_state),
                      gst_element_state_get_name(pending_state));

@@ -4,6 +4,7 @@
 #include <UdpClient.hpp>
 #include <SipMessage.hpp>
 #include <SipMessageFactory.hpp>
+#include "DTMFHandler.h"
 
 class Application
 {
@@ -36,6 +37,7 @@ private:
     int _app_port;
     SipMessageFactory _messagesFactory;
     std::thread _registerThread;
+    std::shared_ptr<DTMFHandler> _dtmfHandler;
     std::unordered_map<std::string, std::function<void(std::shared_ptr<SipMessage> request)>> _handlers;
 
 };

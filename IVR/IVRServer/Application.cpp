@@ -14,6 +14,7 @@ Application::Application(std::string server_ip, int server_port, std::string app
     _server_port(server_port),
     _app_ip(app_ip),
     _app_port(app_port),
+    _dtmfHandler(std::make_shared<DTMFHandler>()),
     _server(server_ip, server_port, std::bind(&Application::onNewMessage, this, std::placeholders::_1, std::placeholders::_2)) {
     LOG_W << "Application created: " << server_ip << ":" << server_port << ", " << app_ip << ":" << app_port << ENDL;
     _server.startReceive();
@@ -86,6 +87,7 @@ void Application::OnInvite(std::shared_ptr<SipMessage> data)
         if (mediaSession) {
             callSession->setMediaSession(mediaSession);
             callSession->setState(CallSession::State::Connected);
+            mediaSession->setMediaSessionCallback(_dtmfHandler);
         } else {
             LOG_E << "Failed to create media session -> remove session" << ENDL;
             SessionManager::getInstance()->removeSession(callSession);

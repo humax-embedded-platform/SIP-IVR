@@ -19,6 +19,7 @@
 #define REQUEST_TYPE_STOP_SESSION "stop_session"
 #define REQUEST_TYPE_CLOSE_SESSION "close_session"
 #define REQUEST_TYPE_UPDATE_SESSION "update_session"
+#define REQUEST_TYPE_GET_DTMF_EVENT "get_dtmf_event"
 
 
 typedef struct Request {

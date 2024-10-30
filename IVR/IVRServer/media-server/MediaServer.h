@@ -1,9 +1,7 @@
 #ifndef MEDIASERVER_H
 #define MEDIASERVER_H
 
-#define DEFAULT_HOST "127.0.0.1"
-#define DEFAULT_PORT 9999
-
+#include "Defines.h"
 #include <thread>
 #include <memory>
 class RequestHandler;

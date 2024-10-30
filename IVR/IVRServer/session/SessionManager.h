@@ -17,6 +17,7 @@ public:
 
     std::shared_ptr<CallSession> getSession(std::string callID);
     std::shared_ptr<CallSession> createSession(std::string callID);
+    std::shared_ptr<CallSession> findSession(std::shared_ptr<MediaSession> mediaSession);
     void removeSession(std::string callID);
     void removeSession(std::shared_ptr<CallSession>);
     void dumpSessions();

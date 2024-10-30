@@ -22,6 +22,10 @@ public:
     bool start();
     bool stop();
     bool close();
+
+    std::string getDTMFEvent();
+    void clearDTMFEvent();
+
 private:
     std::string _sessionID;
     int _localPort;
