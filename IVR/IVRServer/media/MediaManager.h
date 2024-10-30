@@ -20,6 +20,7 @@ public:
 
     bool startMediaSession(std::shared_ptr<MediaSession> mediaSession);
     bool stopMediaSession(std::shared_ptr<MediaSession> mediaSession);
+    bool updateMediaSession(std::shared_ptr<MediaSession> mediaSession);
 
 private:
     std::map<std::string, std::shared_ptr<MediaSession>> _sessionMap;

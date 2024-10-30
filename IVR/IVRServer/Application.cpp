@@ -14,7 +14,6 @@ Application::Application(std::string server_ip, int server_port, std::string app
     _server_port(server_port),
     _app_ip(app_ip),
     _app_port(app_port),
-    _dtmfHandler(std::make_shared<DTMFHandler>()),
     _server(server_ip, server_port, std::bind(&Application::onNewMessage, this, std::placeholders::_1, std::placeholders::_2)) {
     LOG_W << "Application created: " << server_ip << ":" << server_port << ", " << app_ip << ":" << app_port << ENDL;
     _server.startReceive();
@@ -44,6 +43,7 @@ Application::Application(std::string server_ip, int server_port, std::string app
             std::this_thread::sleep_for(std::chrono::seconds(60));
         }
     });
+    _dtmfHandler = std::make_shared<DTMFHandler>(this);
 }
 
 void Application::onNewMessage(std::string data, sockaddr_in src)
@@ -169,7 +169,7 @@ void Application::OnAck(std::shared_ptr<SipMessage> data)
         callSession->setState(CallSession::State::Connected);
         std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
         if (mediaSession) {
-            mediaSession->setPbSourceFile("~/WorkSpace/SipServer/IVR_Application/media/welcome.wav");
+            mediaSession->setPbSourceFile("~/WorkSpace/SipServer/blob/welcome.wav");
             MediaManager::getInstance()->startMediaSession(mediaSession);
         } else {
             LOG_E << "MediaSession not found" << ENDL;

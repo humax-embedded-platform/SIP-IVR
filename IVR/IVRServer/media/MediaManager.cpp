@@ -56,3 +56,10 @@ bool MediaManager::stopMediaSession(std::shared_ptr<MediaSession> mediaSession)
     _mediaClient->stopSession(mediaSession);
     return true;
 }
+
+bool MediaManager::updateMediaSession(std::shared_ptr<MediaSession> mediaSession)
+{
+    LOG_D << "Updating media session" << ENDL;
+    _mediaClient->updateSession(mediaSession);
+    return true;
+}

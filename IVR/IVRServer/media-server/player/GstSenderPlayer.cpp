@@ -31,6 +31,8 @@ void GstSenderPlayer::destroyPipeline()
 void GstSenderPlayer::setPBSourceFile(const std::string &sourceFile)
 {
     if (_context->_pipeline) {
+        gst_element_set_state(_context->_pipeline, GST_STATE_NULL);
+
         GstElement *filesrc = gst_bin_get_by_name(GST_BIN(_context->_pipeline), "source");
         if (!filesrc) {
             spdlog::error("Failed to get filesrc element");
@@ -38,6 +40,8 @@ void GstSenderPlayer::setPBSourceFile(const std::string &sourceFile)
         }
         g_object_set(G_OBJECT(filesrc), "location", sourceFile.c_str(), nullptr);
         gst_object_unref(filesrc);
+
+        gst_element_set_state(_context->_pipeline, GST_STATE_PLAYING);
     }
 }
 
@@ -79,7 +83,13 @@ gboolean GstSenderPlayer::onBusCallback(GstBus *bus, GstMessage *message, gpoint
     }
     case GST_MESSAGE_EOS:
     {
-        gst_element_set_state(pipeline, GST_STATE_PLAYING);
+        g_usleep(5000000);
+        if (!gst_element_seek(pipeline, 1.0, GST_FORMAT_TIME,
+                              (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE),
+                              GST_SEEK_TYPE_SET, 0,
+                              GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
+            spdlog::error("Failed to seek to start");
+        }
         break;
     }
     case GST_MESSAGE_ELEMENT: //gstdtmfdemay event..
