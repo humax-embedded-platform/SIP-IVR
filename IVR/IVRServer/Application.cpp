@@ -46,6 +46,26 @@ Application::Application(std::string server_ip, int server_port, std::string app
     _dtmfHandler = std::make_shared<DTMFHandler>(this);
 }
 
+std::string Application::serverHost() const
+{
+    return _server_ip;
+}
+
+int Application::serverPort() const
+{
+    return _server_port;
+}
+
+std::string Application::getAppIP() const
+{
+    return _app_ip;
+}
+
+int Application::getAppPort() const
+{
+    return _app_port;
+}
+
 void Application::onNewMessage(std::string data, sockaddr_in src)
 {
     auto message = _messagesFactory.createMessage(std::move(data));
@@ -83,6 +103,15 @@ void Application::OnInvite(std::shared_ptr<SipMessage> data)
         return;
     } else {
         callSession = SessionManager::getInstance()->createSession(callID);
+        std::string fromNUmber = sdp->getFromNumber();
+        std::string toNumber = sdp->getToNumber();
+        std::string fromTag = sdp->getFromTag();
+        std::string toTag = sdp->getToTag();
+        std::shared_ptr<SipClient> src = std::make_shared<SipClient>(fromNUmber, sdp->getSrc());
+        callSession->setSrc(src, sdp->getRtpPort());
+        callSession->setFromTag(fromTag);
+        LOG_I << "From: " << fromNUmber << ", To: " << toNumber << ", FromTag: " << fromTag << ", ToTag: " << toTag << ENDL;
+
         std::shared_ptr<MediaSession> mediaSession = MediaManager::getInstance()->createSession(sdp->getRtpHost(), sdp->getRtpPort(), sdp->mediaDescription());
         if (mediaSession) {
             callSession->setMediaSession(mediaSession);

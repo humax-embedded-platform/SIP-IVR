@@ -189,7 +189,7 @@ std::string MediaClient::readDTMF(std::shared_ptr<MediaSession> session)
 
 bool MediaClient::sendRequest(Request &req, Response &res)
 {
-    LOG_I << "Sending request: " << req.payload() << ENDL;
+    // LOG_I << "Sending request: " << req.payload() << ENDL;
     bool succes = false;
     std::shared_ptr<Connection> conn = std::make_shared<Connection>();
 
@@ -225,7 +225,7 @@ bool MediaClient::sendRequest(Request &req, Response &res)
     // Read response from the server
     int bytesReceived = read(conn->sock, buffer, BUFFER_SIZE);
     if (bytesReceived > 0) {
-        LOG_I << "Response from server: " << buffer << ENDL;
+        // LOG_I << "Response from server: " << buffer << ENDL;
         res.parse(buffer);
         succes = true;
     } else if (bytesReceived == 0) {

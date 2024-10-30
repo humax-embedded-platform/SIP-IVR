@@ -23,6 +23,12 @@ void CallSession::setDest(std::shared_ptr<SipClient> dest, uint32_t destRtpPort)
 	_destRtpPort = destRtpPort;
 }
 
+void CallSession::setSrc(std::shared_ptr<SipClient> src, uint32_t srcRtpPort)
+{
+    _src = src;
+    _srcRtpPort = srcRtpPort;
+}
+
 std::string CallSession::getCallID() const
 {
 	return _callID;

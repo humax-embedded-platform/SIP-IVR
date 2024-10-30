@@ -103,7 +103,7 @@ static void on_incoming_call(pjsua_acc_id acc_id, pjsua_call_id call_id, pjsip_r
     }
 
     // Play a prompt (for example, a WAV file saying "Please press 1 for sales, 2 for support")
-    play_prompt(call_id, "media/welcome.wav");
+    play_prompt(call_id, "../blob/welcome.wav");
 }
 
 #define MAX_DIGITS 10
@@ -123,13 +123,13 @@ static void on_dtmf_digit(pjsua_call_id call_id, int digit) {
         //     return;
         // }
         // original_call_c_id = call_id;
-        pj_str_t forward_to = pj_str("sip:phong2@192.168.0.4");  // Destination to forward the call
+        pj_str_t forward_to = pj_str("sip:phong3@192.168.0.3");  // Destination to forward the call
         PJ_LOG(3, (THIS_FILE, "Forwarding call to %.*s", (int)forward_to.slen, forward_to.ptr));
         pjsua_call_xfer(call_id, &forward_to, NULL);
         // Call transfer logic here, using pjsua_call_xfer()
     } else if (digit == '3') {
         // Transfer to support
-        play_prompt(call_id, "media/transfering.wav");
+        play_prompt(call_id, "../blob/transfering.wav");
         // hold_call(call_id);
         // make_call_to_c("sip:phong3@192.168.0.4");
         // pj_str_t forward_to = pj_str("sip:phong3@192.168.0.4");  // Destination to forward the call
@@ -225,11 +225,11 @@ int main() {
     // Add an account to receive calls
     pjsua_acc_config acc_cfg;
     pjsua_acc_config_default(&acc_cfg);
-    acc_cfg.id = pj_str("sip:phongivr@192.168.0.4");
-    acc_cfg.reg_uri = pj_str("sip:192.168.0.4");
+    acc_cfg.id = pj_str("sip:mvnivr@192.168.0.3");
+    acc_cfg.reg_uri = pj_str("sip:192.168.0.3");
     acc_cfg.cred_count = 1;
-    acc_cfg.cred_info[0].realm = pj_str("192.168.0.4");
-    acc_cfg.cred_info[0].username = pj_str("phongivr");
+    acc_cfg.cred_info[0].realm = pj_str("192.168.0.3");
+    acc_cfg.cred_info[0].username = pj_str("mvnivr");
     acc_cfg.cred_info[0].data_type = PJSIP_CRED_DATA_PLAIN_PASSWD;
     acc_cfg.cred_info[0].data = pj_str(" ");
 

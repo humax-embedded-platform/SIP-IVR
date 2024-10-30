@@ -23,13 +23,14 @@ public:
     explicit CallSession(std::string callID);
 
 	void setState(State state);
-	void setDest(std::shared_ptr<SipClient> dest, uint32_t destRtpPort);
+    void setDest(std::shared_ptr<SipClient> dest, uint32_t destRtpPort);
+    void setSrc(std::shared_ptr<SipClient> src, uint32_t srcRtpPort);
 
 	std::string getCallID() const;
 	std::shared_ptr<SipClient> getSrc() const;
-	std::shared_ptr<SipClient> getDest() const;
-	uint32_t getSrcRtpPort() const;
-	uint32_t getDestRtpPort() const;
+    std::shared_ptr<SipClient> getDest() const;
+    uint32_t getSrcRtpPort() const;
+    uint32_t getDestRtpPort() const;
 	State getState() const;
     std::string getFromTag() const;
     void setFromTag(std::string fromTag);

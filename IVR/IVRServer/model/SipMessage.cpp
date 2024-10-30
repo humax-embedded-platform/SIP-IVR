@@ -6,6 +6,7 @@
 #include <cstring>
 #include "Log.hpp"
 #include "AppDefines.h"
+#include "NetUtil.h"
 
 SipMessage::SipMessage()
 {
@@ -37,16 +38,19 @@ void SipMessage::parse()
 		if (line.find(SipMessageHeaders::VIA) != std::string::npos)
 		{
             _via = extractHeader(line, SipMessageHeaders::VIA);
+            extractSrc(line, _src);
 		}
 		else if (line.find(SipMessageHeaders::FROM) != std::string::npos)
 		{
             _from = extractHeader(line, SipMessageHeaders::FROM);
 			_fromNumber = extractNumber(line);
+            _fromTag = extractTag(line);
 		}
 		else if (line.find(SipMessageHeaders::TO) == 0)
 		{
             _to = extractHeader(line, SipMessageHeaders::TO);
 			_toNumber = extractNumber(line);
+            _toTag = extractTag(line);
 		}
 		else if (line.find(SipMessageHeaders::CALL_ID) != std::string::npos)
 		{
@@ -171,6 +175,16 @@ void SipMessage::setReplaces(std::string value)
 	}
 }
 
+void SipMessage::setReferTo(std::string value)
+{
+    _referTo = std::move(value);
+}
+
+void SipMessage::setReferBy(std::string value)
+{
+    _referedBy = std::move(value);
+}
+
 void SipMessage::setContentLength(std::string value)
 {
 	_contentLength = std::move(value);
@@ -195,7 +209,9 @@ std::string SipMessage::toPayload()
                           "Max-Forwards: 70" + SipMessageHeaders::HEADERS_DELIMETER + \
                           "Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO" + SipMessageHeaders::HEADERS_DELIMETER + \
                           "User-Agent: " + APP_USERAGENT + SipMessageHeaders::HEADERS_DELIMETER + \
-                          "Content-Length: " + _contentLength + SipMessageHeaders::HEADERS_DELIMETER + SipMessageHeaders::HEADERS_DELIMETER;
+                          (_referTo.empty() ? "" : (std::string(SipMessageHeaders::REFER_TO) + ": " + _referTo + SipMessageHeaders::HEADERS_DELIMETER)) + \
+                          (_referedBy.empty() ? "" : (std::string(SipMessageHeaders::REFERED_BY) + ": " + _referedBy + SipMessageHeaders::HEADERS_DELIMETER)) + \
+                           "Content-Length: " + _contentLength + SipMessageHeaders::HEADERS_DELIMETER + SipMessageHeaders::HEADERS_DELIMETER;
     return message;
 }
 
@@ -224,6 +240,11 @@ std::string SipMessage::getFromNumber() const
 	return _fromNumber;
 }
 
+std::string SipMessage::getFromTag() const
+{
+    return _fromTag;
+}
+
 std::string SipMessage::getTo() const
 {
 	return _to;
@@ -232,6 +253,11 @@ std::string SipMessage::getTo() const
 std::string SipMessage::getToNumber() const
 {
 	return _toNumber;
+}
+
+std::string SipMessage::getToTag() const
+{
+    return _toTag;
 }
 
 std::string SipMessage::getCallID() const
@@ -269,8 +295,29 @@ std::string SipMessage::getContentType() const
     return _contentType;
 }
 
+sockaddr_in SipMessage::getSrc() const
+{
+    return _src;
+}
+
 std::string SipMessage::extractNumber(std::string header) const
 {
 	auto indexOfNumber = header.find("sip:") + 4;
 	return header.substr(indexOfNumber, header.find("@") - indexOfNumber);
+}
+
+std::string SipMessage::extractTag(std::string line) const
+{
+    auto indexOfTag = line.find("tag=") + 4;
+    return line.substr(indexOfTag, line.find(SipMessageHeaders::HEADERS_DELIMETER) - indexOfTag);
+}
+
+bool SipMessage::extractSrc(std::string line, sockaddr_in &sa)
+{
+    auto indexOfIP = line.find("Via: SIP/2.0/UDP ") + 18;
+    auto indexOfPort = line.find(":", indexOfIP);
+    auto indexOfEnd = line.find(";", indexOfPort);
+    auto ip = line.substr(indexOfIP, indexOfPort - indexOfIP);
+    auto port = line.substr(indexOfPort + 1, indexOfEnd - indexOfPort - 1);
+    return NetUtil::ipv4ToSa(ip.c_str(), _src, std::stoi(port));
 }

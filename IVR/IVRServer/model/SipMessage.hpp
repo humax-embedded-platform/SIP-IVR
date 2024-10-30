@@ -25,6 +25,8 @@ public:
 	void setCSeq(std::string value);
 	void setContact(std::string value);
 	void setReplaces(std::string value);
+    void setReferTo(std::string value);
+    void setReferBy(std::string value);
 	void setContentLength(std::string value);
     void setContentType(std::string value);
 
@@ -34,8 +36,10 @@ public:
 	std::string getVia() const;
 	std::string getFrom() const;
 	std::string getFromNumber() const;
+    std::string getFromTag() const;
 	std::string getTo() const;
 	std::string getToNumber() const;
+    std::string getToTag() const;
 	std::string getCallID() const;
 	std::string getCSeq() const;
 	std::string getContact() const;
@@ -43,6 +47,7 @@ public:
 	std::string getReferToNumber() const;
 	std::string getContentLength() const;
     std::string getContentType() const;
+    sockaddr_in getSrc() const;
 
     virtual std::string toPayload();
 
@@ -51,14 +56,18 @@ protected:
 	bool isValidMessage() const;
     std::string extractHeader(std::string &line, std::string header) const;
 	std::string extractNumber(std::string header) const;
+    std::string extractTag(std::string line) const;
+    bool extractSrc(std::string line, sockaddr_in &sa);
 
 	std::string _type;
 	std::string _header;
 	std::string _via;
 	std::string _from;
 	std::string _fromNumber;
+    std::string _fromTag;
 	std::string _to;
 	std::string _toNumber;
+    std::string _toTag;
 	std::string _callID;
 	std::string _cSeq;
 	std::string _contact;
@@ -70,6 +79,7 @@ protected:
 	std::string _referToNumber;
 	std::string _referedBy;
 	std::string _messageStr;
+    sockaddr_in _src;
 };
 
 #endif

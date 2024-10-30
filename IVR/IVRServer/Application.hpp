@@ -11,11 +11,17 @@ class Application
 public:
     Application(std::string server_ip, int server_port, std::string app_ip, int app_port);
 
-private:
-    void onNewMessage(std::string data, sockaddr_in src);
+public:
+    std::string serverHost() const;
+    int serverPort() const;
+    std::string getAppIP() const;
+    int getAppPort() const;
+
+    std::string getAppTag();
     void sendToServer(std::shared_ptr<SipMessage> message);
 
 private:
+    void onNewMessage(std::string data, sockaddr_in src);
     void OnCancel(std::shared_ptr<SipMessage> data);
     void onReqTerminated(std::shared_ptr<SipMessage> data);
     void OnInvite(std::shared_ptr<SipMessage> data);
@@ -27,7 +33,6 @@ private:
     void OnOk(std::shared_ptr<SipMessage> data);
     void OnAck(std::shared_ptr<SipMessage> data);
 
-    std::string getAppTag();
 
 private:
     UdpClient _server;

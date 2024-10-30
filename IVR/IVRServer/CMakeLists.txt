@@ -44,6 +44,7 @@ add_executable(IVRServer
   AppDefines.h
   media/MediaClient.h media/MediaClient.cpp
   DTMFHandler.h DTMFHandler.cpp
+  helpers/NetUtil.h helpers/NetUtil.cpp
 )
 
 # target_link_libraries(IVRServer Qt${QT_VERSION_MAJOR}::Core)
