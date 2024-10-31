@@ -43,7 +43,7 @@ void DTMFHandler::makeRefer(std::string agentID, std::shared_ptr<CallSession> se
 {
     LOG_D << "Making refer to agent: " << agentID << ENDL;
     std::shared_ptr<MediaSession> mediaSession = session->getMediaSession();
-    mediaSession->setPbSourceFile("~/WorkSpace/SipServer/blob/redirecting.wav");
+    mediaSession->setPbSourceFile("~/WorkSpace/SipServer/Blob/redirecting.wav");
     MediaManager::getInstance()->updateMediaSession(mediaSession);
 
 

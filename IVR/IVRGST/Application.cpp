@@ -198,7 +198,7 @@ void Application::OnAck(std::shared_ptr<SipMessage> data)
         callSession->setState(CallSession::State::Connected);
         std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
         if (mediaSession) {
-            mediaSession->setPbSourceFile("~/WorkSpace/SipServer/blob/welcome.wav");
+            mediaSession->setPbSourceFile("~/WorkSpace/SipServer/Blob/welcome.wav");
             MediaManager::getInstance()->startMediaSession(mediaSession);
         } else {
             LOG_E << "MediaSession not found" << ENDL;
