@@ -71,8 +71,13 @@ static void play_prompt(pjsua_call_id call_id, const char* wav_file) {
     pj_status_t status;
     pj_str_t wav_path = pj_str(wav_file);
 
+    static pjsua_player_id player_id = PJSUA_INVALID_ID;
+    // stop current playing media
+    if (player_id != PJSUA_INVALID_ID) {
+        pjsua_player_destroy(player_id);
+    }
+
     // Create player
-    pjsua_player_id player_id;
     status = pjsua_player_create(&wav_path, PJMEDIA_FILE_NO_LOOP, &player_id);
     if (status != PJ_SUCCESS) {
         printf("Error: unable to create player for file %s\n", wav_file);
@@ -115,7 +120,7 @@ static void on_dtmf_digit(pjsua_call_id call_id, int digit) {
 
     if (digit == '2') {
         // Transfer to support
-        play_prompt(call_id, "media/transfering.wav");
+        play_prompt(call_id, "../blob/redirecting.wav");
         // hold_call(call_id);
         // consultation_call_c_id = make_call_to_c("sip:phong2@192.168.0.4");
         // if (consultation_call_c_id == PJSUA_INVALID_ID) {
@@ -123,13 +128,13 @@ static void on_dtmf_digit(pjsua_call_id call_id, int digit) {
         //     return;
         // }
         // original_call_c_id = call_id;
-        pj_str_t forward_to = pj_str("sip:phong3@192.168.0.3");  // Destination to forward the call
+        pj_str_t forward_to = pj_str("sip:agen2@192.168.0.3");  // Destination to forward the call
         PJ_LOG(3, (THIS_FILE, "Forwarding call to %.*s", (int)forward_to.slen, forward_to.ptr));
         pjsua_call_xfer(call_id, &forward_to, NULL);
         // Call transfer logic here, using pjsua_call_xfer()
     } else if (digit == '3') {
         // Transfer to support
-        play_prompt(call_id, "../blob/transfering.wav");
+        play_prompt(call_id, "../blob/redirecting.wav");
         // hold_call(call_id);
         // make_call_to_c("sip:phong3@192.168.0.4");
         // pj_str_t forward_to = pj_str("sip:phong3@192.168.0.4");  // Destination to forward the call

@@ -6,8 +6,18 @@
 #include "Log.hpp"
 #include "SipMessageFactory.hpp"
 
-#define TEST_CALLER_IP "192.168.0.6"
-#define TEST_CALLER_PORT "77777"
+#define SIP_SERVER_IP "192.168.0.3"
+
+#define IVR_NAME "mvnivr"
+#define IVR_IP "192.168.0.3"
+#define IVR_PORT "5555"
+
+#define CLIENT_NAME "client1"
+#define CLIENT_IP "192.168.0.8"
+#define CLIENT_PORT "8340"
+
+#define AGENT_NAME "agent2"
+#define AGENT_IP "192.168.0.6"
 
 RequestsHandler::RequestsHandler(std::string serverIp, int serverPort,
     OnHandledEvent onHandledEvent) :
@@ -199,9 +209,9 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> data)
     char response[BUFFER_SIZE];
     snprintf(response, BUFFER_SIZE,
              "SIP/2.0 202 Accepted\r\n"
-             "Via: SIP/2.0/UDP " TEST_CALLER_IP ":"TEST_CALLER_PORT";branch=z9hG4bK1234\r\n"
-             "From: <sip:phongivr@192.168.0.4>\r\n"
-             "To: <sip:phong1@192.168.0.4>\r\n"
+             "Via: SIP/2.0/UDP " IVR_IP ":"IVR_PORT";branch=z9hG4bK1234\r\n"
+             "From: <sip:"IVR_NAME"@"SIP_SERVER_IP">\r\n"
+             "To: <sip:"CLIENT_NAME"@"SIP_SERVER_IP">\r\n"
              "Call-ID: %s\r\n"
              "CSeq: 1 REFER\r\n"
              "Content-Length: 0\r\n\r\n",
@@ -209,18 +219,30 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> data)
     auto responseMsg = factory.createMessage(response, session.value()->getSrc()->getAddress());
     if (responseMsg.has_value())
     {
-        endHandle("phongivr", responseMsg.value());
+        endHandle(IVR_NAME, responseMsg.value());
     }
+
+    std::string content = std::string("v=0\r\n"
+                "o=- 7223043 7223302 IN IP4 "CLIENT_IP"\r\n"
+                "s=eyeBeam\r\n"
+                "c=IN IP4 "CLIENT_IP"\r\n"
+                "t=0 0\r\n"
+                "m=audio ") + std::to_string(port) + " RTP/AVP 100 6 0 8 3 18 5 101\r\n"
+                "a=alt:1 1 : 03CBAE4D 00000018 "CLIENT_IP" " + std::to_string(port) + "\r\n"
+                "a=fmtp:101 0-15\r\n"
+                "a=rtpmap:100 speex/16000\r\n"
+                "a=rtpmap:101 telephone-event/8000\r\n"
+                "a=sendrecv\r\n";
 
     // Send invite to the refer target.
     char invite[BUFFER_SIZE];
     snprintf(invite, BUFFER_SIZE,
-                "INVITE sip:phong2@192.168.0.4;transport=UDP SIP/2.0\r\n"
-                "Via: SIP/2.0/UDP "TEST_CALLER_IP ":" TEST_CALLER_PORT ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n"
+                "INVITE sip:"AGENT_NAME"@"SIP_SERVER_IP";transport=UDP SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP "CLIENT_IP ":" CLIENT_PORT ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n"
                 "Max-Forwards: 70\r\n"
-                "Contact: <sip:phong1@"TEST_CALLER_IP":"TEST_CALLER_PORT";transport=UDP>\r\n"
-                "To: <sip:phong2@192.168.0.4>\r\n"
-                "From: <sip:phong1@192.168.0.4;transport=UDP>;tag=%s\r\n"
+                "Contact: <sip:"CLIENT_NAME"@"CLIENT_IP":"CLIENT_PORT";transport=UDP>\r\n"
+                "To: <sip:"AGENT_NAME"@"SIP_SERVER_IP">\r\n"
+                "From: <sip:"CLIENT_NAME"@"SIP_SERVER_IP";transport=UDP>;tag=%s\r\n"
                 "Call-ID: %s\r\n"
                 "CSeq: 1 INVITE\r\n"
                 "Allow: INVITE, ACK, CANCEL, BYE, NOTIFY, REFER, MESSAGE, OPTIONS, INFO, SUBSCRIBE\r\n"
@@ -228,21 +250,11 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> data)
                 "Supported: replaces, norefersub, extended-refer, timer, sec-agree, outbound, path, X-cisco-serviceuri\r\n"
                 "User-Agent: Z 5.6.4 v2.10.20.4_1\r\n"
                 "Allow-Events: presence, kpml, talk, as-feature-event\r\n"
-                "Content-Length: 338\r\n"
+                "Content-Length: %d\r\n"
                 "\r\n"
-                "v=0\r\n"
-                "o=- 7223043 7223302 IN IP4 "TEST_CALLER_IP"\r\n"
-                "s=eyeBeam\r\n"
-                "c=IN IP4 "TEST_CALLER_IP"\r\n"
-                "t=0 0\r\n"
-                "m=audio %d RTP/AVP 100 6 0 8 3 18 5 101\r\n"
-                "a=alt:1 1 : 03CBAE4D 00000018 "TEST_CALLER_IP" %d\r\n"
-                "a=fmtp:101 0-15\r\n"
-                "a=rtpmap:100 speex/16000\r\n"
-                "a=rtpmap:101 telephone-event/8000\r\n"
-                "a=sendrecv\r\n", session.value()->getFromTag().c_str(), newCallId.c_str(), port, port);
+                "%s", session.value()->getFromTag().c_str(), newCallId.c_str(), content.size(), content.c_str());
     auto inviteMsg = factory.createMessage(invite, session.value()->getSrc()->getAddress());
-    endHandle("phong2", inviteMsg.value());
+    endHandle(AGENT_NAME, inviteMsg.value());
 }
 
 void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
@@ -330,7 +342,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
             std::string ivrTag = "";
             for (auto& [callId, _session] : _sessions)
             {
-                if (_session->getDest()->getNumber() == "phongivr")
+                if (_session->getDest()->getNumber() == IVR_NAME)
                 {
                     // LOG_D << "Found session for callID: " << callId << ENDL;
                     // //remove "Call-ID: " in callId
@@ -344,14 +356,26 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                 }
             }
             uint32_t port = session->get()->getDestRtpPort();
+            std::string content = std::string("v=0\r\n"
+                        "o=- 179839242 179839248 IN IP4 "AGENT_IP"\r\n"
+                        "s=eyeBeam\r\n"
+                        "c=IN IP4 "AGENT_IP"\r\n"
+                        "t=0 0\r\n"
+                        "m=audio ") + std::to_string(port) + " RTP/AVP 100 6 0 8 3 18 5 101\r\n"
+                        "a=alt:1 1 : 0FF5390C 000000AF "AGENT_IP"" + std::to_string(port) + "\r\n"
+                        "a=fmtp:101 0-15\r\n"
+                        "a=rtpmap:100 speex/16000\r\n"
+                        "a=rtpmap:101 telephone-event/8000\r\n"
+                        "a=sendrecv\r\n";
+
             char invite[BUFFER_SIZE];
             snprintf(invite, BUFFER_SIZE,
-                        "INVITE sip:phong1@192.168.0.4;transport=UDP SIP/2.0\r\n"
-                        "Via: SIP/2.0/UDP 192.168.0.4:5555;branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n"
+                        "INVITE sip:"CLIENT_NAME"@"SIP_SERVER_IP";transport=UDP SIP/2.0\r\n"
+                        "Via: SIP/2.0/UDP "IVR_IP":"IVR_PORT";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n"
                         "Max-Forwards: 70\r\n"
-                        "Contact: <sip:phongivr@192.168.0.4:5555;transport=UDP>\r\n"
-                        "To: <sip:phong1@192.168.0.4>;tag=%s\r\n"
-                        "From: <sip:phongivr@192.168.0.4;transport=UDP>;tag=%s\r\n"
+                        "Contact: <sip:"IVR_NAME"@"IVR_IP":"IVR_PORT";transport=UDP>\r\n"
+                        "To: <sip:"CLIENT_NAME"@"SIP_SERVER_IP">;tag=%s\r\n"
+                        "From: <sip:"IVR_NAME"@"SIP_SERVER_IP";transport=UDP>;tag=%s\r\n"
                         "Call-ID: %s\r\n"
                         "CSeq: 2 INVITE\r\n"
                         "Allow: INVITE, ACK, CANCEL, BYE, NOTIFY, REFER, MESSAGE, OPTIONS, INFO, SUBSCRIBE\r\n"
@@ -359,23 +383,13 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                         "Supported: replaces, norefersub, extended-refer, timer, sec-agree, outbound, path, X-cisco-serviceuri\r\n"
                         "User-Agent: Z 5.6.4 v2.10.20.4_1\r\n"
                         "Allow-Events: presence, kpml, talk, as-feature-event\r\n"
-                        "Content-Length: 338\r\n"
+                        "Content-Length: %d\r\n"
                         "\r\n"
-                        "v=0\r\n"
-                        "o=- 179839242 179839248 IN IP4 192.168.0.8\r\n"
-                        "s=eyeBeam\r\n"
-                        "c=IN IP4 192.168.0.8\r\n"
-                        "t=0 0\r\n"
-                        "m=audio %d RTP/AVP 100 6 0 8 3 18 5 101\r\n"
-                        "a=alt:1 1 : 0FF5390C 000000AF 192.168.0.8 %d\r\n"
-                        "a=fmtp:101 0-15\r\n"
-                        "a=rtpmap:100 speex/16000\r\n"
-                        "a=rtpmap:101 telephone-event/8000\r\n"
-                        "a=sendrecv\r\n", session.value()->getFromTag().c_str(), ivrTag.c_str(), orginalCallID.c_str(), port, port);
+                        "%s", session.value()->getFromTag().c_str(), ivrTag.c_str(), orginalCallID.c_str(), content.size(), content.c_str());
 
             SipMessageFactory factory;
             auto inviteMsg = factory.createMessage(invite, session.value()->getSrc()->getAddress());
-            endHandle("phong1", inviteMsg.value());
+            endHandle(AGENT_NAME, inviteMsg.value());
             return;
         } else {
             LOG_E << "Invalid CSeq: " << data->getCSeq() << ENDL;
