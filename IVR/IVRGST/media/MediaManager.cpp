@@ -53,6 +53,7 @@ bool MediaManager::startMediaSession(std::shared_ptr<MediaSession> mediaSession)
 bool MediaManager::stopMediaSession(std::shared_ptr<MediaSession> mediaSession)
 {
     LOG_D << "Stopping media session" << ENDL;
+    mediaSession->stopReadDTMF();
     _mediaClient->stopSession(mediaSession);
     return true;
 }

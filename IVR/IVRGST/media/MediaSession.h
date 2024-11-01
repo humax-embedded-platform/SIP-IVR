@@ -39,6 +39,7 @@ public:
     void setMediaSessionCallback(std::shared_ptr<MediaSessionCallback> callback);
 
     void startReadDTMF(std::shared_ptr<MediaClient> mediaClient);
+    void stopReadDTMF();
 private:
     std::string _clientIp;
     int _clientRtpPort;

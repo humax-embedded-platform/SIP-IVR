@@ -298,6 +298,10 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
             return;
         }
 
+        std::shared_ptr<SipClient> src = session.value()->getSrc();
+        std::shared_ptr<SipClient> dest = session.value()->getDest();
+        std::shared_ptr<SipClient> referedDest = session.value()->getReferedDest();
+
         if (data->getCSeq().find(SipMessageTypes::INVITE) != std::string::npos)
         {
             bool transferedInvite = false, updateMediaInvite = false;
@@ -316,9 +320,6 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                 return;
             }
 
-            std::shared_ptr<SipClient> src = session.value()->getSrc();
-            std::shared_ptr<SipClient> dest = session.value()->getDest();
-            std::shared_ptr<SipClient> referedDest = session.value()->getReferedDest();
             if (referedDest) {
                 if (referedDest->getNumber() == sdpMessage->getToNumber()) {
                     transferedInvite = true;
@@ -447,21 +448,40 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                 }
                 return;
             }
+        } else if (data->getCSeq().find(SipMessageTypes::BYE) != std::string::npos) {
+            if (session.value()->getState() == Session::State::Bye)
+            {
+                LOG_I << "Calling terminated." << ENDL;
+                if (!referedDest) {
+                    endHandle(data->getFromNumber(), data);
+                    endCall(data->getCallID(), data->getToNumber(), data->getFromNumber());
+                } else {
+                    if (data->getContactNumber() == src->getNumber()) {
+                        // Send 200 OK to the refered dest.
+                        data->setFrom("From: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getReferedToTag());
+                        //update via
+                        std::string via = data->getVia();
+                        std::string partern = dest->getIp() + ":" + std::to_string(dest->getPort());
+                        if (via.find(partern) != std::string::npos) {
+                            via.replace(via.find(partern), partern.size(), referedDest->getIp() + ":" + std::to_string(referedDest->getPort()));
+                        }
+                        data->setVia(via);
+                        endHandle(referedDest->getNumber(), data);
+                        endCall(data->getCallID(), data->getToNumber(), data->getFromNumber());
+                    } else if (data->getContactNumber() == referedDest->getNumber()) {
+                        // Send 200 OK to the src.
+                        data->setFrom("From: <sip:" + dest->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getToTag());
+                        endHandle(src->getNumber(), data);
+                        endCall(data->getCallID(), data->getFromNumber(), data->getToNumber());
+                    }
+                }
+            }
         } else {
-            std::shared_ptr<SipClient> dest = session.value()->getDest();
-            std::shared_ptr<SipClient> referedDest = session.value()->getReferedDest();
             if (dest && dest->getNumber() == data->getFromNumber() && referedDest) {
                 LOG_I << "IVR disconnected." << ENDL;
             } else {
                 LOG_E << "Invalid CSeq: " << data->getCSeq() << ENDL;
             }
-        }
-
-        if (session.value()->getState() == Session::State::Bye)
-        {
-            LOG_I << "Calling terminated." << ENDL;
-            endHandle(data->getFromNumber(), data);
-            endCall(data->getCallID(), data->getToNumber(), data->getFromNumber());
         }
     } else {
         LOG_E << "Session not found for callID: " << data->getCallID() << ENDL;

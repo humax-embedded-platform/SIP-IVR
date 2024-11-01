@@ -83,3 +83,12 @@ void MediaSession::startReadDTMF(std::shared_ptr<MediaClient> mediaClient)
         }
     });
 }
+
+void MediaSession::stopReadDTMF()
+{
+    _readDTMFThreadRunning = false;
+    if (_readDTMFThread) {
+        _readDTMFThread->join();
+        _readDTMFThread = nullptr;
+    }
+}
