@@ -18,6 +18,8 @@ public:
 
 	std::string getNumber() const;
 	sockaddr_in getAddress() const;
+    std::string getIp() const;
+    uint16_t getPort() const;
 
 private:
 	std::string _number;

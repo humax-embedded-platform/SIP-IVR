@@ -16,10 +16,16 @@ void Session::setState(State state)
 	}
 }
 
-void Session::setDest(std::shared_ptr<SipClient> dest, uint32_t destRtpPort)
+void Session::setDest(std::shared_ptr<SipClient> dest, uint32_t rtpPort)
 {
 	_dest = dest;
-	_destRtpPort = destRtpPort;
+    _destRtpPort = rtpPort;
+}
+
+void Session::setReferedDest(std::shared_ptr<SipClient> dest, uint32_t rtpPort)
+{
+    _referedDest = dest;
+    _referedDestRtpPort = rtpPort;
 }
 
 std::string Session::getCallID() const
@@ -35,6 +41,11 @@ std::shared_ptr<SipClient> Session::getSrc() const
 std::shared_ptr<SipClient> Session::getDest() const
 {
 	return _dest;
+}
+
+std::shared_ptr<SipClient> Session::getReferedDest() const
+{
+    return _referedDest;
 }
 
 Session::State Session::getState() const
@@ -62,6 +73,16 @@ void Session::setToTag(std::string toTag)
     _toTag = toTag;
 }
 
+std::string Session::getReferedToTag() const
+{
+    return _referedToTag;
+}
+
+void Session::setReferedToTag(std::string toTag)
+{
+    _referedToTag = toTag;
+}
+
 uint32_t Session::getSrcRtpPort() const
 {
 	return _srcRtpPort;
@@ -70,4 +91,9 @@ uint32_t Session::getSrcRtpPort() const
 uint32_t Session::getDestRtpPort() const
 {
 	return _destRtpPort;
+}
+
+uint32_t Session::getReferedDestRtpPort() const
+{
+    return _referedDestRtpPort;
 }

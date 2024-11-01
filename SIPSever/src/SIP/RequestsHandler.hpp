@@ -43,7 +43,7 @@ private:
 	bool registerClient(std::shared_ptr<SipClient> client);
 	void unregisterClient(std::shared_ptr<SipClient> client);
 
-	std::optional<std::shared_ptr<SipClient>> findClient(const std::string& number);
+    std::shared_ptr<SipClient> findClient(const std::string& number);
 
 	void endHandle(const std::string& destNumber, std::shared_ptr<SipMessage> message);
 
