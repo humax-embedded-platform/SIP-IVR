@@ -5,6 +5,7 @@
 #include "IDGen.hpp"
 #include "Log.hpp"
 #include "SipMessageFactory.hpp"
+#include <random>
 
 #define SIP_SERVER_IP "192.168.0.3"
 
@@ -18,6 +19,26 @@
 
 #define AGENT_NAME "agent2"
 #define AGENT_IP "192.168.0.6"
+
+std::string generateBranch() {
+    // Start with the "magic cookie"
+    std::string branch = "z9hG4bK-";
+
+    // Use a random device and generator
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(0, 15);
+
+    // Generate a 32-character hexadecimal string
+    std::stringstream ss;
+    for (int i = 0; i < 32; ++i) {
+        ss << std::hex << dist(gen);
+    }
+
+    // Append the generated string to the branch cookie
+    branch += ss.str();
+    return branch;
+}
 
 RequestsHandler::RequestsHandler(std::string serverIp, int serverPort,
     OnHandledEvent onHandledEvent) :
@@ -264,7 +285,7 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
 
     std::string invite = std::string() +
                 "INVITE sip:" + referedDest->getNumber() + "@" + _serverIp + ";transport=UDP SIP/2.0\r\n" +
-                "Via: SIP/2.0/UDP " + src->getIp() + ":" + std::to_string(src->getPort()) +  ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n" +
+                "Via: SIP/2.0/UDP " + src->getIp() + ":" + std::to_string(src->getPort()) +  ";branch=" + generateBranch() + ";rport\r\n" +
                 "Max-Forwards: 70\r\n" +
                 "Contact: <sip:" + src->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ">\r\n" +
                 "To: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">\r\n" +
@@ -379,7 +400,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
 
                     std::string invite = std::string() +
                                 "INVITE sip:" + src->getNumber() +"@" + _serverIp + ";transport=UDP SIP/2.0\r\n" +
-                                "Via: SIP/2.0/UDP " + dest->getIp() + ":" + std::to_string(dest->getPort()) + ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n" +
+                                "Via: SIP/2.0/UDP " + dest->getIp() + ":" + std::to_string(dest->getPort()) + ";branch=" + generateBranch() + ";rport\r\n" +
                                 "Max-Forwards: 70\r\n"  +
                                 "Contact: <sip:" + dest->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ">\r\n" +
                                 "To: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getFromTag() + "\r\n" +
