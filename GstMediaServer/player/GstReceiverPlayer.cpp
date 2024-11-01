@@ -155,12 +155,10 @@ gboolean GstReceiverPlayer::onBusCallback(GstBus *bus, GstMessage *message, gpoi
 
 std::string GstReceiverPlayer::getDTMFEvent()
 {
-    spdlog::info("Getting DTMF Event: {}", _dtmfEvent);
     return _dtmfEvent;
 }
 
 void GstReceiverPlayer::setDTMFEvent(const std::string &dtmfEvent)
 {
-    spdlog::info("Setting DTMF Event: {}", dtmfEvent);
     _dtmfEvent = dtmfEvent;
 }

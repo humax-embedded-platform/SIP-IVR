@@ -233,7 +233,7 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
                 "INVITE sip:" + referedDest->getNumber() + "@" + _serverIp + ";transport=UDP SIP/2.0\r\n" +
                 "Via: SIP/2.0/UDP " + src->getIp() + ":" + std::to_string(src->getPort()) +  ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n" +
                 "Max-Forwards: 70\r\n" +
-                "Contact: <sip:" + src->getNumber() + "@" + src->getIp() + ":" + std::to_string(src->getPort()) + ";transport=UDP>\r\n" +
+                "Contact: <sip:" + src->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ";transport=UDP>\r\n" +
                 "To: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">\r\n" +
                 "From: <sip:" + src->getNumber() + "@" + _serverIp + ";transport=UDP>;tag=" + session.value()->getFromTag() + "\r\n" +
                 callId + "\r\n" +
@@ -347,7 +347,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                                 "INVITE sip:" + src->getNumber() +"@" + _serverIp + ";transport=UDP SIP/2.0\r\n" +
                                 "Via: SIP/2.0/UDP " + dest->getIp() + ":" + std::to_string(dest->getPort()) + ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n" +
                                 "Max-Forwards: 70\r\n"  +
-                                "Contact: <sip:" + dest->getNumber() + "@" + dest->getIp() + ":" + std::to_string(dest->getPort()) + ";transport=UDP>\r\n" +
+                                "Contact: <sip:" + dest->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ";transport=UDP>\r\n" +
                                 "To: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getFromTag() + "\r\n" +
                                 "From: <sip:" + dest->getNumber() + "@" + _serverIp + ";transport=UDP>;tag=" + session.value()->getToTag() +"\r\n" +
                                 session.value()->getCallID() + "\r\n" +
@@ -367,18 +367,30 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                 } else if (updateMediaInvite) {
                     LOG_D << "Update media INVITE OK. -> Send ACK to " << referedDest->getNumber() << ENDL;
                     // Send ACK to the refered client.
-                    std::string ack = std::string() +
-                                "ACK sip:" + referedDest->getNumber() + "@" + _serverIp + " SIP/2.0\r\n" +
-                                "Via: SIP/2.0/UDP " + src->getIp() + ":" + std::to_string(src->getPort()) + ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n" +
-                                "Max-Forwards: 70\r\n" +
-                                "To: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">\r\n" +
-                                "From: <sip:" + src->getNumber() + "@" + _serverIp + ";transport=UDP>;tag=" + session.value()->getFromTag() + "\r\n" +
-                                session.value()->getCallID() + "\r\n" +
-                                "CSeq: 1 ACK\r\n" +
-                                "Content-Length: 0\r\n" +
-                                "\r\n";
+                    // std::string ack = std::string() +
+                    //             "ACK sip:" + referedDest->getNumber() + "@" + _serverIp + " SIP/2.0\r\n" +
+                    //             "Via: SIP/2.0/UDP " + src->getIp() + ":" + std::to_string(src->getPort()) + ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n" +
+                    //             "Max-Forwards: 70\r\n" +
+                    //             "To: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">\r\n" +
+                    //             "From: <sip:" + src->getNumber() + "@" + _serverIp + ";transport=UDP>;tag=" + session.value()->getFromTag() + "\r\n" +
+                    //             session.value()->getCallID() + "\r\n" +
+                    //             "CSeq: 1 ACK\r\n" +
+                    //             "Content-Length: 0\r\n" +
+                    //             "\r\n";
+                    std::string ackAgent = std::string() +
+                                           "ACK sip:" + referedDest->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ";transport=UDP SIP/2.0\r\n" +
+                                           "To: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getReferedToTag() + "\r\n" +
+                                           "From: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getFromTag() + "\r\n" +
+                                           "Via: SIP/2.0/UDP " + src->getIp() + ":" + std::to_string(src->getPort()) + ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n" +
+                                           session.value()->getCallID() + "\r\n" +
+                                           "CSeq: 1 ACK\r\n" +
+                                           "Contact: <sip:" + src->getNumber() + "@" + src->getIp() + ":" + std::to_string(src->getPort()) + ">\r\n" +
+                                           "Max-Forwards: 70\r\n" +
+                                           "User-Agent: eyeBeam release 3007n stamp 17816" + "\r\n" +
+                                           "Content-Length: 0\r\n" +
+                                           "\r\n";
                     SipMessageFactory factory;
-                    auto ackMsg = factory.createMessage(ack, src->getAddress());
+                    auto ackMsg = factory.createMessage(ackAgent, src->getAddress());
                     endHandle(referedDest->getNumber(), ackMsg.value());
 
                     // Send ACK to client
