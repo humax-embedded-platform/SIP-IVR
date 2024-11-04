@@ -34,12 +34,6 @@ public:
 	uint32_t getDestRtpPort() const;
     uint32_t getReferedDestRtpPort() const;
 	State getState() const;
-    std::string getFromTag() const;
-    void setFromTag(std::string fromTag);
-    std::string getToTag() const;
-    void setToTag(std::string toTag);
-    std::string getReferedToTag() const;
-    void setReferedToTag(std::string toTag);
 
 private:
 	std::string _callID;
@@ -52,10 +46,6 @@ private:
 	uint32_t _srcRtpPort;
 	uint32_t _destRtpPort;
     uint32_t _referedDestRtpPort;
-
-    std::string _fromTag;
-    std::string _toTag;
-    std::string _referedToTag;
 };
 
 #endif
