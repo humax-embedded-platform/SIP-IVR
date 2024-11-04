@@ -12,9 +12,11 @@ GstCaps *GstReceiverPlayer::onRequestPtMap (GstElement* object, guint arg0, guin
     if(payload == 104){
         GstCaps * caps = gst_caps_from_string("application/x-rtp, media=(string)AMR, encoding-params=(string)1, octet-align=(string)1, payload=(int)104");
         return caps;
-    }
-    else if(payload == 101){
+    } else if(payload == 101){
         GstCaps * caps = gst_caps_from_string("application/x-rtp,media=(string)audio,clock-rate=(int)8000,encoding-name=TELEPHONE-EVENT,payload=(int)101");
+        return caps;
+    } else if(payload == 98){
+        GstCaps * caps = gst_caps_from_string("application/x-rtp,media=(string)audio,clock-rate=(int)48000,encoding-name=TELEPHONE-EVENT,payload=(int)98");
         return caps;
     }
     return NULL;
@@ -38,7 +40,7 @@ void GstReceiverPlayer::onPadAdded (GstElement* object, GstPad* new_pad, gpointe
 
     if (payload == 8 /* PCMA */)  {
         // Do nothing
-    } else if (payload == 101 /* TELEPHONE-EVENT */)  {
+    } else if (payload == 101 /* TELEPHONE-EVENT */ || payload == 98)  {
         GError *err = 0;
 
         GstElement* rtpdtmfdepay = gst_bin_get_by_name(GST_BIN(player->_context->_pipeline), "rtpdtmfdepay");

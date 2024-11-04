@@ -38,7 +38,6 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
             res.type = req.type;
             res.sessionID = "";
             res.error = "Failed to create session";
-            return;
         } else {
             if (data.contains(REMOTE_MEDIA_DESC)) {
                 std::string mediaDesc = data[REMOTE_MEDIA_DESC];
@@ -56,6 +55,7 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
             res.sessionID = session->sessionID();
             res.data = session->sessionID();
         }
+        spdlog::info("init_session response: {}", res.sessionID);
         sendResponse(conectionFd, res);
     } else if (req.type == REQUEST_TYPE_START_SESSION) {
         spdlog::info("Handling start_session request ... {}", req.sessionID);
@@ -152,7 +152,7 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
         res.data = "Session stopped";
         sendResponse(conectionFd, res);
     } else if (req.type == REQUEST_TYPE_GET_DTMF_EVENT) {
-        spdlog::info("Handling get_dtmf_event request ...{}", req.sessionID);
+        // spdlog::info("Handling get_dtmf_event request ...{}", req.sessionID);
         auto _sessionManager = SessionManager::getInstance();
         std::shared_ptr<MediaSession> session = _sessionManager->getSession(req.sessionID);
         Response res;
@@ -187,7 +187,7 @@ bool RequestHandler::parseRequest(const char *buffer, int len, Request &req)
 {
     bool success = false;
     json reqJson = json::parse(buffer);
-    spdlog::info("Request: {}", reqJson.dump());
+    // spdlog::info("Request: {}", reqJson.dump());
     if (reqJson.contains(REQUEST_TYPE)) {
         success = true;
         req.type = reqJson[REQUEST_TYPE];
@@ -213,6 +213,6 @@ void RequestHandler::sendResponse(int conectionFd, const Response &res)
     resJson[REQUEST_DATA] = res.data;
     resJson[REQUEST_ERROR] = res.error;
     std::string response = resJson.dump();
-    spdlog::info("Sending response ...{}", response);
+    // spdlog::info("Sending response ...{}", response);
     send(conectionFd, response.c_str(), response.size(), 0);
 }
