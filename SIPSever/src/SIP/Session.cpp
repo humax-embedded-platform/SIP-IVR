@@ -1,7 +1,7 @@
 #include "Session.hpp"
 
-Session::Session(std::string callID, std::shared_ptr<SipClient> src, uint32_t srcRtpPort) :
-	_callID(std::move(callID)), _src(src), _state(State::Invited), _srcRtpPort(srcRtpPort), _destRtpPort(0)
+Session::Session(std::string callID, std::shared_ptr<SipClient> src) :
+    _callID(std::move(callID)), _src(src), _state(State::Invited)
 {
 }
 
@@ -16,16 +16,14 @@ void Session::setState(State state)
 	}
 }
 
-void Session::setDest(std::shared_ptr<SipClient> dest, uint32_t rtpPort)
+void Session::setDest(std::shared_ptr<SipClient> dest)
 {
 	_dest = dest;
-    _destRtpPort = rtpPort;
 }
 
-void Session::setReferedDest(std::shared_ptr<SipClient> dest, uint32_t rtpPort)
+void Session::setReferedDest(std::shared_ptr<SipClient> dest)
 {
     _referedDest = dest;
-    _referedDestRtpPort = rtpPort;
 }
 
 std::string Session::getCallID() const
@@ -51,19 +49,4 @@ std::shared_ptr<SipClient> Session::getReferedDest() const
 Session::State Session::getState() const
 {
 	return _state;
-}
-
-uint32_t Session::getSrcRtpPort() const
-{
-	return _srcRtpPort;
-}
-
-uint32_t Session::getDestRtpPort() const
-{
-	return _destRtpPort;
-}
-
-uint32_t Session::getReferedDestRtpPort() const
-{
-    return _referedDestRtpPort;
 }
