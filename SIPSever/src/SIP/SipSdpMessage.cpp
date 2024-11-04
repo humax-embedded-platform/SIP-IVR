@@ -2,6 +2,7 @@
 #include "SipMessageHeaders.h"
 #include <string>
 #include <cstring>
+#include "Log.hpp"
 
 SipSdpMessage::SipSdpMessage(std::string message, sockaddr_in src) : SipMessage(std::move(message), std::move(src))
 {
@@ -66,6 +67,7 @@ void SipSdpMessage::parse()
 
 	auto posOfM = msg.find("v=");
 	msg.erase(0, posOfM);
+    	_mediaDescContent = msg;
 	size_t pos = 0;
 	while ((pos = msg.find(SipMessageHeaders::HEADERS_DELIMETER)) != std::string::npos)
 	{
@@ -122,6 +124,11 @@ std::string SipSdpMessage::dump() {
 		"\tMedia: " + _media + "\n " \
 		"\tRtpPort: " + std::to_string(_rtpPort) +
 		"\n}";
+}
+
+std::string SipSdpMessage::mediaDescContent() const
+{
+    return _mediaDescContent;
 }
 
 int SipSdpMessage::extractRtpPort(std::string data) const

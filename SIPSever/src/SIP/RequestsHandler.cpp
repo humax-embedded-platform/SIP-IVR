@@ -146,6 +146,7 @@ void RequestsHandler::OnInvite(std::shared_ptr<SipMessage> data)
         return;
     }
 
+    caller->setMediaDescContent(message->mediaDescContent());
     auto newSession = std::make_shared<Session>(data->getCallID(), caller, message->getRtpPort());
     _sessions.emplace(data->getCallID(), newSession);
 
@@ -270,7 +271,7 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
     // Send a 202 Accepted response for the REFER.
     endHandle(dest->getNumber(), responseMsg.value());
 
-
+#if 0
     std::string content = std::string("v=0\r\n"
                 "o=- 7223043 7223302 IN IP4 " + src->getIp() +  "\r\n" +
                 "s=eyeBeam\r\n"
@@ -282,6 +283,9 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
                 "a=rtpmap:100 speex/16000\r\n" +
                 "a=rtpmap:101 telephone-event/8000\r\n" +
                 "a=sendrecv\r\n";
+#else 
+    std::string content = src->mediaDescContent();
+#endif
 
     std::string invite = std::string() +
                 "INVITE sip:" + referedDest->getNumber() + "@" + _serverIp + ";transport=UDP SIP/2.0\r\n" +
@@ -343,6 +347,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
 
             if (referedDest) {
                 if (referedDest->getNumber() == sdpMessage->getToNumber()) {
+                    referedDest->setMediaDescContent(sdpMessage->mediaDescContent());
                     transferedInvite = true;
                 } else if (src->getNumber() == sdpMessage->getToNumber()) {
                     updateMediaInvite = true;
@@ -374,6 +379,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
             }
 
             if (!transferedInvite && !updateMediaInvite) {
+                client->setMediaDescContent(sdpMessage->mediaDescContent());
                 session->get()->setDest(client, sdpMessage->getRtpPort());
                 session->get()->setState(Session::State::Connected);
 
@@ -386,6 +392,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                     LOG_D << "Transfered INVITE OK." << ENDL;
                     session.value()->setReferedDest(referedDest, sdpMessage->getRtpPort());
                     uint32_t port = session->get()->getReferedDestRtpPort();
+#if 0
                     std::string content = std::string("v=0\r\n"
                                 "o=- 179839242 179839248 IN IP4 " + referedDest->getIp() + "\r\n" +
                                 "s=eyeBeam\r\n" +
@@ -397,7 +404,9 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                                 "a=rtpmap:100 speex/16000\r\n" +
                                 "a=rtpmap:101 telephone-event/8000\r\n" +
                                 "a=sendrecv\r\n";
-
+#else
+                    std::string content = referedDest->mediaDescContent();
+#endif
                     std::string invite = std::string() +
                                 "INVITE sip:" + src->getNumber() +"@" + _serverIp + ";transport=UDP SIP/2.0\r\n" +
                                 "Via: SIP/2.0/UDP " + dest->getIp() + ":" + std::to_string(dest->getPort()) + ";branch=" + generateBranch() + ";rport\r\n" +

@@ -20,10 +20,13 @@ public:
 	sockaddr_in getAddress() const;
     std::string getIp() const;
     uint16_t getPort() const;
+    std::string mediaDescContent() const;
+    void setMediaDescContent(std::string mediaDescContent);
 
 private:
 	std::string _number;
 	sockaddr_in _address;
+    std::string _mediaDescContent;
 };
 
 #endif

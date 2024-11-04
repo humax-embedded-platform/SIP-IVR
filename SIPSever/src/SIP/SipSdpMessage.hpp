@@ -19,6 +19,7 @@ public:
 	std::string getMedia() const;
 	int getRtpPort() const;
 	std::string dump()override;
+    std::string mediaDescContent() const;
 
 private:
 	void parse() override;
@@ -31,6 +32,7 @@ private:
 	std::string _time;
 	std::string _media;
 	int _rtpPort;
+    std::string _mediaDescContent;
 };
 
 #endif
