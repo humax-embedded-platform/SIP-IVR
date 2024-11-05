@@ -1,21 +1,17 @@
 #include "SipMessageFactory.hpp"
 #include <iostream>
-#include "Log.hpp"
 
 std::optional<std::shared_ptr<SipMessage>> SipMessageFactory::createMessage(std::string message, sockaddr_in src)
 {
-	// std::cout << "Creating SIP message: " << message << std::endl;
 	try
 	{
 		if (containsSdp(message))
 		{
 			auto msg = std::make_shared<SipSdpMessage>(std::move(message), std::move(src));
-			// LOG_D << "msg: " << msg->dump() << ENDL;
 			return msg;
 		}
 
 		auto msg = std::make_shared<SipMessage>(std::move(message), std::move(src));
-		// LOG_D << "msg: " << msg->dump() << ENDL;
 		return msg;
 	}
 	catch (const std::exception&)

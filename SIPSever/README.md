@@ -19,20 +19,11 @@ If one of the sides has been hung up, the server will got bye message which will
 
 # Build
 
-#### Windows 
-Using Visual Studio command prompt
-
 ```bash
   mkdir build && cd build
-  cmake ..
-  msbuild SipServer.sln
-```
-
-#### Linux 
-
-```bash
-  mkdir build && cd build
-  cmake ..
+  cmake .. 
+	or
+  cmake -DCMAKE_BUILD_TYPE=Debug #for log enable
   make
 ```
 # Program options

@@ -1,6 +1,7 @@
 #include <iostream>
 #include "SipServer.hpp"
 #include "cxxopts.hpp"
+#include "Log.hpp"
 
 int main(int argc, char** argv)
 {
@@ -15,7 +16,7 @@ int main(int argc, char** argv)
 
 	if (result.count("help"))
 	{
-		std::cout << options.help() << std::endl;
+        Logger::getLogger()->info(options.help());
 		exit(0);
 	}
 
@@ -23,13 +24,13 @@ int main(int argc, char** argv)
 	{
 		std::string ip = result["ip"].as<std::string>();
 		int port = result["port"].as<int>();
-		SipServer server(std::move(ip), port);
-		std::cout << "Server has been started. Listening..." << std::endl;
+        SipServer server(std::move(ip), port);
+        Logger::getLogger()->info("Server has been started. Listening...");
 		getchar();
 	}
 	catch (const cxxopts::OptionException&)
-	{
-		std::cout << "Please enter ip and port." << std::endl;
+    {
+        Logger::getLogger()->error("Please enter ip and port.");
 	}
 	return 0;
 }

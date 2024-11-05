@@ -2,11 +2,31 @@
 #define LOG_HPP
 
 #include <iostream>
+#include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/logger.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 
-#define LOG_W std::cout << "\033[1;33m[" << __FUNCTION__ << ":" << __LINE__ << "] "
-#define LOG_I std::cout << "\033[1;30m[" << __FUNCTION__ << ":" << __LINE__ << "] "
-#define LOG_D std::cout << "\033[1;32m[" << __FUNCTION__ << ":" << __LINE__ << "] "
-#define LOG_E std::cerr << "[" << __FUNCTION__ << ":" << __LINE__ << "] "
-#define ENDL "\033[0m\n"
+class Logger {
+private:
+    Logger() {}
+    Logger(Logger const&) = delete;
+public:
+    static std::shared_ptr<spdlog::logger> getLogger() {
+        static std::shared_ptr<spdlog::logger> logger = nullptr;
+        if (!logger) {
+#ifdef DEBUG_MODE
+            spdlog::set_pattern("[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %v");
+            spdlog::set_level(spdlog::level::debug); // Set global log level to debug
+            logger = spdlog::stdout_color_mt("console");
+#else
+            auto max_size = 1048576 * 5;
+            auto max_files = 3;
+            logger = spdlog::rotating_logger_mt("some_logger_name", "logs/rotating.txt", max_size, max_files);
+#endif
+        }
+        return logger;
+    }
+};
 
 #endif

@@ -1,4 +1,5 @@
 #include "Session.hpp"
+#include "Log.hpp"
 
 Session::Session(std::string callID, std::shared_ptr<SipClient> src) :
     _callID(std::move(callID)), _src(src), _state(State::Invited)
@@ -11,8 +12,8 @@ void Session::setState(State state)
 		return;
 	_state = state;
 	if (state == State::Connected)
-	{
-		std::cout << "Session Created between " << _src->getNumber() << " and " << _dest->getNumber() << std::endl;
+    {
+        Logger::getLogger()->info("Session Created between {} and {}", _src->getNumber(), _dest->getNumber());
 	}
 }
 

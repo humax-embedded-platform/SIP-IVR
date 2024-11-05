@@ -59,7 +59,7 @@ void UdpServer::startReceive()
 				recvfrom(_sockfd, buffer, BUFFER_SIZE, 0, reinterpret_cast<struct sockaddr*>(&senderEndPoint), &len);
 #endif
 				if (len) {
-                    LOG_I << "Received from " << inet_ntoa(senderEndPoint.sin_addr) << ":" << ntohs(senderEndPoint.sin_port) << " with message: \n" << buffer << ENDL;
+                    Logger::getLogger()->info("Received from {}:{} with message: {}" , inet_ntoa(senderEndPoint.sin_addr), ntohs(senderEndPoint.sin_port), buffer);
 				}
 				if (!_keepRunning) return;
 				_onNewMessageEvent(std::move(buffer), senderEndPoint);
@@ -69,7 +69,7 @@ void UdpServer::startReceive()
 
 int UdpServer::send(sockaddr_in address, std::string buffer)
 {
-	LOG_D << "Sending to " << inet_ntoa(address.sin_addr) << ":" << ntohs(address.sin_port) << " with message: \n" << buffer << ENDL;
+    Logger::getLogger()->info("Sending to {}:{} with message: {}" , inet_ntoa(address.sin_addr), ntohs(address.sin_port), buffer);
 	return sendto(_sockfd, buffer.c_str(), std::strlen(buffer.c_str()),
 		0, reinterpret_cast<const struct sockaddr*>(&address), sizeof(address));
 }

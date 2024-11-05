@@ -67,7 +67,6 @@ void RequestsHandler::initHandlers()
 void RequestsHandler::handle(std::shared_ptr<SipMessage> request)
 {
     static int count = 0;
-    // std::cout << "handle: " << request->toString() << std::endl;
     if (_handlers.find(request->getType()) != _handlers.end())
     {
         _handlers[request->getType()](std::move(request));
@@ -118,11 +117,11 @@ void RequestsHandler::OnCancel(std::shared_ptr<SipMessage> data)
 
 void RequestsHandler::onReqTerminated(std::shared_ptr<SipMessage> data)
 {
-    LOG_D << "Request Terminated: " << ENDL;
+    Logger::getLogger()->info("Request Terminated");
     std::string callId = data->getCallID();
     auto session = getSession(callId);
     if (!session.has_value()) {
-        LOG_E << "Session not found for callID: " << callId << ENDL;
+        Logger::getLogger()->error("Session not found for callID: {}", callId);
 
         // Send ACK to refered agent.
         data->setHeader(std::string("ACK sip:") + data->getToNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ";transport=UDP SIP/2.0");
@@ -135,10 +134,10 @@ void RequestsHandler::onReqTerminated(std::shared_ptr<SipMessage> data)
 
 void RequestsHandler::OnInvite(std::shared_ptr<SipMessage> data)
 {
-    LOG_I << "OnInvite: " << data->toString() << ENDL;
+    Logger::getLogger()->info("OnInvite: {}", data->toString());
     auto caller = findClient(data->getFromNumber());
     if (caller == nullptr) {
-        LOG_E << "Caller not found: " << data->getFromNumber() << ENDL;
+        Logger::getLogger()->error("Caller not found: {}", data->getFromNumber());
         return;
     }
 
@@ -154,7 +153,7 @@ void RequestsHandler::OnInvite(std::shared_ptr<SipMessage> data)
     auto message = dynamic_cast<SipSdpMessage*>(data.get());
     if (!message)
     {
-        LOG_E << "Couldn't get SDP from " << data->getFromNumber() << "'s INVITE request." << ENDL;
+        Logger::getLogger()->error("Couldn't get SDP from {}'s INVITE request.", data->getFromNumber());
         return;
     }
 
@@ -193,11 +192,11 @@ void RequestsHandler::OnUnavailable(std::shared_ptr<SipMessage> data)
 
 void RequestsHandler::OnBye(std::shared_ptr<SipMessage> data)
 {
-    LOG_I << "OnBye: " << ENDL;
+    Logger::getLogger()->info("OnBye: {}", data->toString());
     std::string callId = data->getCallID();
     auto session = getSession(callId);
     if (!session.has_value()) {
-        LOG_E << "Session not found for callID: " << callId << ENDL;
+        Logger::getLogger()->error("Session not found for callID: {}", callId);
         return;
     }
 
@@ -238,7 +237,6 @@ void RequestsHandler::OnBye(std::shared_ptr<SipMessage> data)
             std::string via = data->getVia();
             // replace
             std::string partern = referedDest->getIp() + ":" + std::to_string(referedDest->getPort());
-            LOG_D << "partern: " << partern << ENDL;
             if (via.find(partern) != std::string::npos) {
                 via.replace(via.find(partern), partern.size(), dest->getIp() + ":" + std::to_string(dest->getPort()));
             }
@@ -254,11 +252,11 @@ void RequestsHandler::OnBye(std::shared_ptr<SipMessage> data)
 
 void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
 {
-    LOG_I << ENDL;
+    Logger::getLogger()->info("OnRefer: {}", refer->toString());
     std::string callId = refer->getCallID();
     auto session = getSession(callId);
     if (!session.has_value()) {
-        LOG_E << "Session not found for callID: " << callId << ENDL;
+        Logger::getLogger()->error("Session not found for callID: {}", callId);
         return;
     }
 
@@ -269,12 +267,10 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
     std::shared_ptr<SipClient> src = session->get()->getSrc();
     std::shared_ptr<SipClient> referedDest = findClient(refer->getReferToNumber());
 
-    LOG_D << "Src: " << src->getNumber() << ENDL;
-    LOG_D << "Dest: " << dest->getNumber() << ENDL;
-    LOG_D << "Refered to: " << referedDest->getNumber() << ENDL;
+    Logger::getLogger()->info("Src: {} Dest: {} Refered to: {}", src->getNumber(), dest->getNumber(), referedDest->getNumber());
 
     if (dest->getNumber() != IVR_NAME) {
-        LOG_E << "Refer is only allowed for IVR application." << ENDL;
+        Logger::getLogger()->error("Refer is only allowed for IVR application.");
         return;
     }
 
@@ -298,7 +294,7 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
              callId.c_str());
     auto responseMsg = factory.createMessage(response, session.value()->getSrc()->getAddress());
     if (!responseMsg.has_value()) {
-        LOG_E << "Failed to create response message." << ENDL;
+        Logger::getLogger()->error("Failed to create response message.");
         return;
     }
 
@@ -349,7 +345,7 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
 
 void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
 {
-    LOG_I << ENDL;
+    Logger::getLogger()->info("OnOk: {}", data->toString());
     auto session = getSession(data->getCallID());
     if (session.has_value())
     {
@@ -369,14 +365,14 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
 
             auto client = findClient(data->getToNumber());
             if (!client) {
-                LOG_E << "Client not found: " << data->getToNumber() << ENDL;
+                Logger::getLogger()->error("Client not found: {}", data->getToNumber());
                 return;
             }
 
             auto sdpMessage = dynamic_cast<SipSdpMessage*>(data.get());
             if (!sdpMessage)
             {
-                std::cerr << "Coudn't get SDP from: " << client->getNumber() << "'s OK message.";
+                Logger::getLogger()->error("Coudn't get SDP from: {}'s OK message.", client->getNumber());
                 endCall(data->getCallID(), data->getFromNumber(), data->getToNumber(), "SDP parse error.");
                 return;
             }
@@ -390,7 +386,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                 }
             }
 
-            LOG_D << "CallID: " << data->getCallID() << " transferedInvite: " << transferedInvite << " updateMediaInvite: " << updateMediaInvite << ENDL;
+            Logger::getLogger()->info("CallID: {} transferedInvite: {} updateMediaInvite: {}", data->getCallID(), transferedInvite, updateMediaInvite);
 
             std::string _to = sdpMessage->getTo();
             if (_to.find("tag=") != std::string::npos) {
@@ -426,7 +422,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
             } else {
                 // Send re-invite to the refer client to update media info.
                 if (transferedInvite) {
-                    LOG_D << "Transfered INVITE OK." << ENDL;
+                    Logger::getLogger()->info("Transfered INVITE OK");
                     referedDest->setRtpPort(sdpMessage->getRtpPort());
                     session.value()->setReferedDest(referedDest);
                     uint32_t port = referedDest->getRtpPort();
@@ -467,7 +463,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                     auto inviteMsg = factory.createMessage(invite, session.value()->getSrc()->getAddress());
                     endHandle(src->getNumber(), inviteMsg.value());
                 } else if (updateMediaInvite) {
-                    LOG_D << "Update media INVITE OK. -> Send ACK to " << referedDest->getNumber() << ENDL;
+                    Logger::getLogger()->info("Update media INVITE OK. -> Send ACK to {}", referedDest->getNumber());
                     std::string ackAgent = std::string() +
                                            "ACK sip:" + referedDest->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ";transport=UDP SIP/2.0\r\n" +
                                            "To: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">;tag=" + referedDest->getTag() + "\r\n" +
@@ -519,7 +515,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
         } else if (data->getCSeq().find(SipMessageTypes::BYE) != std::string::npos) {
             if (session.value()->getState() == Session::State::Bye)
             {
-                LOG_I << "Calling terminated." << ENDL;
+                Logger::getLogger()->info("Calling terminated.");
                 if (!referedDest) {
                     endHandle(data->getFromNumber(), data);
                     endCall(data->getCallID(), data->getToNumber(), data->getFromNumber());
@@ -553,22 +549,22 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
             }
         } else {
             if (dest && dest->getNumber() == data->getFromNumber() && referedDest) {
-                LOG_I << "IVR disconnected." << ENDL;
+                Logger::getLogger()->info("IVR disconnected.");
             } else {
-                LOG_E << "Invalid CSeq: " << data->getCSeq() << ENDL;
+                Logger::getLogger()->error("Invalid CSeq: {}", data->getCSeq());
             }
         }
     } else {
-        LOG_E << "Session not found for callID: " << data->getCallID() << ENDL;
+        Logger::getLogger()->error("Session not found for callID: {}", data->getCallID());
     }
 }
 
 void RequestsHandler::OnAck(std::shared_ptr<SipMessage> data)
 {
-    LOG_I << "OnAck: " << data->toString() << ENDL;
+    Logger::getLogger()->info("OnAck: {}", data->toString());
     auto session = getSession(data->getCallID());
     if (!session.has_value()) {
-        LOG_E << "Session not found for callID: " << data->getCallID() << ENDL;
+        Logger::getLogger()->error("Session not found for callID: {}", data->getCallID());
         return;
     }
 
@@ -618,7 +614,7 @@ bool RequestsHandler::setCallState(const std::string& callID, Session::State sta
 
 void RequestsHandler::endCall(const std::string& callID, const std::string& srcNumber, const std::string& destNumber, const std::string& reason)
 {
-    LOG_W << "Ending call: " << callID << " between " << srcNumber << " and " << destNumber << ENDL;
+    Logger::getLogger()->info("Ending call: {} between {} and {}", callID, srcNumber, destNumber);
     if (_sessions.erase(callID) > 0)
     {
         std::ostringstream message;
@@ -627,14 +623,14 @@ void RequestsHandler::endCall(const std::string& callID, const std::string& srcN
         {
             message << " because " << reason;
         }
-        std::cout << message.str() << std::endl;
+        Logger::getLogger()->info(message.str());
     }
 }
 
 bool RequestsHandler::registerClient(std::shared_ptr<SipClient> client)
 {
     if (_clients.find(client->getNumber()) == _clients.end()) {
-        std::cout << "New Client: " << client->getNumber() << std::endl;
+        Logger::getLogger()->info("New client: {}", client->getNumber());
         _clients.emplace(client->getNumber(), client);
         return true;
     } else {
@@ -646,7 +642,7 @@ bool RequestsHandler::registerClient(std::shared_ptr<SipClient> client)
 
 void RequestsHandler::unregisterClient(std::shared_ptr<SipClient> client)
 {
-    std::cout << "unregister client: " << client->getNumber() << std::endl;
+    Logger::getLogger()->info("unregister client: {}", client->getNumber());
     _clients.erase(client->getNumber());
 }
 
@@ -663,7 +659,6 @@ std::shared_ptr<SipClient> RequestsHandler::findClient(const std::string& number
 
 void RequestsHandler::endHandle(const std::string& destNumber, std::shared_ptr<SipMessage> message)
 {
-    std::cout << "[" << __FUNCTION__ << "] Sending to " << destNumber << std::endl;
     auto destClient = findClient(destNumber);
     if (destClient) {
         _onHandled(std::move(destClient->getAddress()), std::move(message));

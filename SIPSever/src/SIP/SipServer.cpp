@@ -10,7 +10,6 @@ SipServer::SipServer(std::string ip, int port) :
 
 void SipServer::onNewMessage(std::string data, sockaddr_in src)
 {
-	// std::cout << "data: " << data << std::endl;
 	auto message = _messagesFactory.createMessage(std::move(data), std::move(src));
 	if (message.has_value())
 	{
@@ -20,6 +19,5 @@ void SipServer::onNewMessage(std::string data, sockaddr_in src)
 
 void SipServer::onHandled(const sockaddr_in& dest, std::shared_ptr<SipMessage> message)
 {
-	// std::cout << "Sending message: " << message->toString() << std::endl;
 	_socket.send(dest, message->toString());
 }
