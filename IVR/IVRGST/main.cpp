@@ -10,6 +10,7 @@
 #include <sstream>
 #include <thread>
 #include "AppDefines.h"
+#include "Log.hpp"
 
 #define SIP_SERVER "192.168.0.4"
 #define LOCAL_IP "192.168.0.4"
@@ -17,23 +18,7 @@
 #define CALLER_URI "sip:phong4@192.168.0.4"
 #define CALLEE_URI "sip:phong2@192.168.0.4"
 
-/*
-thread receiveSipThread;
 
-// Function prototypes
-// Pushes sip messages to UdpClient.sendQueue
-void sendSIPMessage(SipMessage &message);
-// Process incoming sip messages and changes status of the calldetails.
-void receiveSIPMessage(SipMessage message, CallDetails *callDetails);
-
-void registerUser(CallDetails *callDetails);
-void initiateCall(CallDetails *callDetails);
-void terminateCall(CallDetails *callDetails);
-void parseIncomingMessage(CallDetails *callDetails);
-
-// For stopping the receiveSipThread safely.
-atomic_bool running = true;
-*/
 
 int main(int argc, char** argv)
 {
@@ -52,7 +37,7 @@ int main(int argc, char** argv)
 
     if (result.count("help"))
     {
-        std::cout << options.help() << std::endl;
+        Logger::getLogger()->info(options.help());
         exit(0);
     }
 
@@ -64,11 +49,11 @@ int main(int argc, char** argv)
         int app_port = result["app-port"].as<int>();
 
         Application app(server_ip, server_port, app_ip, app_port);
-        std::cout << "Application has been started ..." << std::endl;
+        Logger::getLogger()->info("Application has been started ...");
         getchar();
     }
     catch (const cxxopts::OptionException&)
     {
-        std::cout << "Please enter ip and port." << std::endl;
+        Logger::getLogger()->info("Please enter ip and port.");
     }
 }

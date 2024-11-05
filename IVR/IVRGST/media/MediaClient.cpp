@@ -35,7 +35,7 @@ typedef struct Connection {
             onDataReady();
         });
         if (cv.wait_for(lck, std::chrono::seconds(REQUEST_TIMEOUT)) == std::cv_status::timeout) {
-            LOG_E << "Request timed out" << ENDL;
+            Logger::getLogger()->error("Request timed out");
         }
     }
 #endif
@@ -70,16 +70,16 @@ bool MediaClient::initSession(std::shared_ptr<MediaSession> session)
     req.type = REQUEST_TYPE_INIT_SESSION;
     req.data = data.dump();
     if (!sendRequest(req, res)) {
-        LOG_E << "Failed to send request" << ENDL;
+        Logger::getLogger()->error("Failed to send request");
     } else {
         if (res.success && res.sessionID.length() > 0) {
             session->setSessionID(res.sessionID);
             return true;
         } else {
-            LOG_E << "Failed to initialize session: " << res.error << ENDL;
+            Logger::getLogger()->error("Failed to initialize session: {}", res.error);
         }
     }
-    LOG_E << "Failed to initialize session" << ENDL;
+    Logger::getLogger()->error("Failed to initialize session");
     return false;
 }
 
@@ -97,12 +97,12 @@ bool MediaClient::startSession(std::shared_ptr<MediaSession> session)
     req.sessionID = session->getSessionID();
     req.data = data.dump();
     if (!sendRequest(req, res)) {
-        LOG_E << "Failed to send request" << ENDL;
+        Logger::getLogger()->error("Failed to send request");
     } else {
         if (res.success) {
             return true;
         } else {
-            LOG_E << "Failed to start session: " << res.error << ENDL;
+            Logger::getLogger()->error("Failed to start session: {}", res.error);
         }
     }
     return false;
@@ -115,12 +115,12 @@ bool MediaClient::stopSession(std::shared_ptr<MediaSession> session)
     req.type = REQUEST_TYPE_STOP_SESSION;
     req.sessionID = session->getSessionID();
     if (!sendRequest(req, res)) {
-        LOG_E << "Failed to send request" << ENDL;
+        Logger::getLogger()->error("Failed to send request");
     } else {
         if (res.success) {
             return true;
         } else {
-            LOG_E << "Failed to stop session: " << res.error << ENDL;
+            Logger::getLogger()->error("Failed to stop session: {}", res.error);
         }
     }
     return false;
@@ -133,12 +133,12 @@ bool MediaClient::closeSession(std::shared_ptr<MediaSession> session)
     req.type = REQUEST_TYPE_CLOSE_SESSION;
     req.sessionID = session->getSessionID();
     if (!sendRequest(req, res)) {
-        LOG_E << "Failed to send request" << ENDL;
+        Logger::getLogger()->error("Failed to send request");
     } else {
         if (res.success) {
             return true;
         } else {
-            LOG_E << "Failed to close session: " << res.error << ENDL;
+            Logger::getLogger()->error("Failed to close session: {}", res.error);
         }
     }
     return false;
@@ -158,12 +158,12 @@ bool MediaClient::updateSession(std::shared_ptr<MediaSession> session)
     req.sessionID = session->getSessionID();
     req.data = data.dump();
     if (!sendRequest(req, res)) {
-        LOG_E << "Failed to send request" << ENDL;
+        Logger::getLogger()->error("Failed to send request");
     } else {
         if (res.success) {
             return true;
         } else {
-            LOG_E << "Failed to update session: " << res.error << ENDL;
+            Logger::getLogger()->error("Failed to update session: {}", res.error);
         }
     }
     return false;
@@ -176,12 +176,12 @@ std::string MediaClient::readDTMF(std::shared_ptr<MediaSession> session)
     req.type = REQUEST_TYPE_GET_DTMF_EVENT;
     req.sessionID = session->getSessionID();
     if (!sendRequest(req, res)) {
-        LOG_E << "Failed to send request" << ENDL;
+        Logger::getLogger()->error("Failed to send request");
     } else {
         if (res.success) {
             return res.data;
         } else {
-            LOG_E << "Failed to update session: " << res.error << ENDL;
+            Logger::getLogger()->error("Failed to update session: {}", res.error);
         }
     }
     return "";
@@ -189,13 +189,13 @@ std::string MediaClient::readDTMF(std::shared_ptr<MediaSession> session)
 
 bool MediaClient::sendRequest(Request &req, Response &res)
 {
-    // LOG_I << "Sending request: " << req.payload() << ENDL;
+    // Logger::getLogger()->info("Sending request: {}", req.payload());
     bool succes = false;
     std::shared_ptr<Connection> conn = std::make_shared<Connection>();
 
     // Create socket
     if ((conn->sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        LOG_E << "Socket creation error" << ENDL;
+        Logger::getLogger()->error("Socket creation error");
         return false;
     }
 
@@ -204,13 +204,13 @@ bool MediaClient::sendRequest(Request &req, Response &res)
 
     // Convert IPv4 address from text to binary form
     if (inet_pton(AF_INET, DEFAULT_HOST, &_serv_addr.sin_addr) <= 0) {
-        LOG_E << "Invalid address/Address not supported" << ENDL;
+        Logger::getLogger()->error("Invalid address/Address not supported");
         return false;
     }
 
     // Connect to the server
     if (connect(conn->sock, (struct sockaddr *)&_serv_addr, sizeof(_serv_addr)) < 0) {
-        LOG_E << "Connection Failed" << ENDL;
+        Logger::getLogger()->error("Connection Failed");
         return false;
     }
 
@@ -225,13 +225,13 @@ bool MediaClient::sendRequest(Request &req, Response &res)
     // Read response from the server
     int bytesReceived = read(conn->sock, buffer, BUFFER_SIZE);
     if (bytesReceived > 0) {
-        LOG_I << "Response from server: " << buffer << ENDL;
+        Logger::getLogger()->info("Response from server: {}", buffer);
         res.parse(buffer);
         succes = true;
     } else if (bytesReceived == 0) {
-        LOG_E << "Server closed the connection" << ENDL;
+        Logger::getLogger()->error("Server closed the connection");
     } else {
-        LOG_E << "Read failed" << ENDL;
+        Logger::getLogger()->error("Read failed");
     }
 
     close(conn->sock);

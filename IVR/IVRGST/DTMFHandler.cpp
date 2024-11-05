@@ -13,7 +13,7 @@ void DTMFHandler::onDTMFEvent(std::shared_ptr<MediaSession> session, std::string
 {
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->findSession(session);
     int number = std::stoi(event);
-    LOG_D << "DTMF number: " << number << ENDL;
+    Logger::getLogger()->info("DTMF number: {}", number);
     switch (number) {
     case KEY_0:
         replayGuide();
@@ -41,14 +41,13 @@ void DTMFHandler::onDTMFEvent(std::shared_ptr<MediaSession> session, std::string
 
 void DTMFHandler::makeRefer(std::string agentID, std::shared_ptr<CallSession> session)
 {
-    LOG_D << "Making refer to agent: " << agentID << ENDL;
+    Logger::getLogger()->info("Making refer to agent: {}", agentID);
     std::shared_ptr<MediaSession> mediaSession = session->getMediaSession();
     mediaSession->setPbSourceFile("~/WorkSpace/SipServer/Blob/redirecting.wav");
     MediaManager::getInstance()->updateMediaSession(mediaSession);
 
 
     // Make refer to agent
-    LOG_D << "Making refer to agent: " << agentID << ENDL;
     std::shared_ptr<SipMessage> refer = std::make_shared<SipMessage>();
     refer->setHeader(std::string("REFER sip:") + session->getSrc()->getNumber() + "@" + _app->serverHost() + " SIP/2.0");
     refer->setVia(std::string("SIP/2.0/UDP ") + _app->serverHost() + ":" + std::to_string(_app->serverPort()));

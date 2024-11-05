@@ -28,14 +28,14 @@ std::shared_ptr<CallSession> SessionManager::getSession(std::string callID)
 
 std::shared_ptr<CallSession> SessionManager::createSession(std::string callID)
 {
-    LOG_D << "Creating session for callID: " << callID << ENDL;
+    Logger::getLogger()->info("Creating session for callID: {}", callID);
     if (_sessionMap.find(callID) == _sessionMap.end())
     {
         std::shared_ptr<CallSession> session(new CallSession(callID));
         _sessionMap[callID] = session;
         return session;
     } else {
-        LOG_E << "Session already exists" << ENDL;
+        Logger::getLogger()->error("Session already exists");
         return nullptr;
     }
 }
@@ -68,8 +68,5 @@ void SessionManager::removeSession(std::shared_ptr<CallSession> session)
 
 void SessionManager::dumpSessions()
 {
-    for (auto &session : _sessionMap)
-    {
-        LOG_D << "Session: " << ENDL;
-    }
+    // do nothing
 }

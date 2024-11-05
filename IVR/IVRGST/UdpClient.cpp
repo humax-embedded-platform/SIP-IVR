@@ -8,7 +8,7 @@
 UdpClient::UdpClient(std::string ip, int port, OnNewMessageEvent event) : _ip(std::move(ip)), _port(port), _onNewMessageEvent(event), _keepRunning(false)
 {
 
-    LOG_D << "UdpClient: " << _ip << ":" << _port << ENDL;
+    Logger::getLogger()->info("UdpClient: {}:{}" , _ip, _port);
 #if defined _WIN32 || defined _WIN64
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
@@ -18,8 +18,8 @@ UdpClient::UdpClient(std::string ip, int port, OnNewMessageEvent event) : _ip(st
 	}
 #endif
 
-	if ((_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		std::cerr << "socket creation failed" << std::endl;
+    if ((_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        Logger::getLogger()->error("socket creation failed");
 		exit(EXIT_FAILURE);
 	}
 
@@ -64,8 +64,8 @@ void UdpClient::startReceive()
 				recvfrom(_sockfd, buffer, BUFFER_SIZE, 0, reinterpret_cast<struct sockaddr*>(&senderEndPoint), &len);
 #endif
 				if (len) {
-                    LOG_I << "Received from " << inet_ntoa(senderEndPoint.sin_addr) << ":" << ntohs(senderEndPoint.sin_port) << " with message: \n" << buffer << ENDL;
-				}
+                    Logger::getLogger()->info("Received from {}:{} with message: \n{}" , inet_ntoa(senderEndPoint.sin_addr), ntohs(senderEndPoint.sin_port), buffer);
+                }
 				if (!_keepRunning) return;
 				_onNewMessageEvent(std::move(buffer), senderEndPoint);
 			}
@@ -74,7 +74,7 @@ void UdpClient::startReceive()
 
 int UdpClient::send(std::string buffer)
 {
-    LOG_D << "Sending to server with message: \n" << buffer << ENDL;
+    Logger::getLogger()->info("Sending to server with message: {}" , buffer);
 	return sendto(_sockfd, buffer.c_str(), std::strlen(buffer.c_str()),
         0, reinterpret_cast<const struct sockaddr*>(&_servaddr), sizeof(_servaddr));
 }

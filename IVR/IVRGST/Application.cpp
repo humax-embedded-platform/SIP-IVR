@@ -15,7 +15,7 @@ Application::Application(std::string server_ip, int server_port, std::string app
     _app_ip(app_ip),
     _app_port(app_port),
     _server(server_ip, server_port, std::bind(&Application::onNewMessage, this, std::placeholders::_1, std::placeholders::_2)) {
-    LOG_W << "Application created: " << server_ip << ":" << server_port << ", " << app_ip << ":" << app_port << ENDL;
+    Logger::getLogger()->info("Application created: {}:{}, {}:{}", server_ip, server_port, app_ip, app_port );
     _server.startReceive();
     _handlers.emplace(SipMessageTypes::CANCEL, std::bind(&Application::OnCancel, this, std::placeholders::_1));
     _handlers.emplace(SipMessageTypes::INVITE, std::bind(&Application::OnInvite, this, std::placeholders::_1));
@@ -96,10 +96,10 @@ void Application::OnInvite(std::shared_ptr<SipMessage> data)
 {
     std::shared_ptr<SipSdpMessage> sdp = std::dynamic_pointer_cast<SipSdpMessage>(data);
     std::string callID = sdp->getCallID();
-    LOG_I << "Call ID: " << callID << ENDL;
+    Logger::getLogger()->info("Call ID: {}", callID);
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(callID);
     if (callSession) {
-        LOG_D << "Session already exists" << ENDL;
+        Logger::getLogger()->info("Session already exists");
         return;
     } else {
         callSession = SessionManager::getInstance()->createSession(callID);
@@ -110,7 +110,6 @@ void Application::OnInvite(std::shared_ptr<SipMessage> data)
         std::shared_ptr<SipClient> src = std::make_shared<SipClient>(fromNUmber, sdp->getSrc());
         callSession->setSrc(src, sdp->getRtpPort());
         callSession->setFromTag(fromTag);
-        LOG_I << "From: " << fromNUmber << ", To: " << toNumber << ", FromTag: " << fromTag << ", ToTag: " << toTag << ENDL;
 
         std::shared_ptr<MediaSession> mediaSession = MediaManager::getInstance()->createSession(sdp->getRtpHost(), sdp->getRtpPort(), sdp->mediaDescription());
         if (mediaSession) {
@@ -118,7 +117,7 @@ void Application::OnInvite(std::shared_ptr<SipMessage> data)
             callSession->setState(CallSession::State::Connected);
             mediaSession->setMediaSessionCallback(_dtmfHandler);
         } else {
-            LOG_E << "Failed to create media session -> remove session" << ENDL;
+            Logger::getLogger()->error("Failed to create media session -> remove session");
             SessionManager::getInstance()->removeSession(callSession);
             return;
         }
@@ -157,7 +156,7 @@ void Application::OnUnavailable(std::shared_ptr<SipMessage> data)
 
 void Application::OnBye(std::shared_ptr<SipMessage> data)
 {
-    LOG_I << ENDL;
+    Logger::getLogger()->info("OnBye: {}", data->getCallID());
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getCallID());
     if (callSession) {
         // Send 200 OK response
@@ -173,7 +172,7 @@ void Application::OnBye(std::shared_ptr<SipMessage> data)
             MediaManager::getInstance()->stopMediaSession(mediaSession);
             MediaManager::getInstance()->removeSession(mediaSession);
         } else {
-            LOG_E << "MediaSession not found" << ENDL;
+            Logger::getLogger()->error("MediaSession not found");
         }
     }
 }
@@ -181,18 +180,18 @@ void Application::OnBye(std::shared_ptr<SipMessage> data)
 
 void Application::OnOk(std::shared_ptr<SipMessage> data)
 {
-    LOG_I << ENDL;
+    Logger::getLogger()->info("OnOk: {}", data->getCallID());
     std::string cSqe = data->getCSeq();
     if (cSqe.find("REGISTER") != std::string::npos) {
-        LOG_D << "Register successed" << ENDL;
+        Logger::getLogger()->info("Register successed");
     } else {
-        LOG_D << "Unknown OK message" << ENDL;
+        Logger::getLogger()->warn("Unknown OK message");
     }
 }
 
 void Application::OnAck(std::shared_ptr<SipMessage> data)
 {
-    LOG_I << "OnAck: " << ENDL;
+    Logger::getLogger()->info("OnAck: {}", data->getCallID());
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getCallID());
     if (callSession) {
         callSession->setState(CallSession::State::Connected);
@@ -201,7 +200,7 @@ void Application::OnAck(std::shared_ptr<SipMessage> data)
             mediaSession->setPbSourceFile("~/WorkSpace/SipServer/Blob/welcome.wav");
             MediaManager::getInstance()->startMediaSession(mediaSession);
         } else {
-            LOG_E << "MediaSession not found" << ENDL;
+            Logger::getLogger()->error("MediaSession not found");
         }
     }
 }

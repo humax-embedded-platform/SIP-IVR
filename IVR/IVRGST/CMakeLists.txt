@@ -9,6 +9,21 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-DDEBUG_MODE)
+endif()
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(FetchContent)
+FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG v1.14.1
+)
+FetchContent_MakeAvailable(spdlog)
+
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 # find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
@@ -44,7 +59,7 @@ add_executable(IVRServer
   helpers/NetUtil.h helpers/NetUtil.cpp
 )
 
-# target_link_libraries(IVRServer Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(IVRServer spdlog)
 
 include(GNUInstallDirs)
 install(TARGETS IVRServer

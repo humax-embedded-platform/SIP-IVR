@@ -12,8 +12,8 @@ void CallSession::setState(State state)
 		return;
 	_state = state;
 	if (state == State::Connected)
-	{
-        LOG_D << "Session Created " << _callID << ENDL;
+    {
+        Logger::getLogger()->info("Session Created {}", _callID);
 	}
 }
 

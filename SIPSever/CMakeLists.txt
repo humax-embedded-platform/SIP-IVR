@@ -2,7 +2,6 @@
 
 project ("SipServer")
 
-# check if Debug or Release
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DDEBUG_MODE)
 endif()

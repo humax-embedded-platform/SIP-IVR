@@ -74,12 +74,12 @@ void SipSdpMessage::parse()
         } else if (line.find("c=") == 0)
         {
             _rtpHost = extractRtpHost(std::move(line));
-            LOG_D << "RTP host: " << _rtpHost << ENDL;
+            Logger::getLogger()->info("RTP host: {}", _rtpHost);
         } else if (line.find("a=rtpmap:") != std::string::npos)
         {
             if (_mediaDes.empty()) {
                 _mediaDes = line.substr(line.find("a=rtpmap:") + 2);
-                LOG_D << "Media description: " << _mediaDes << ENDL;
+                Logger::getLogger()->info("Media description: {}", _mediaDes);
             }
         }
 		msg.erase(0, pos + std::strlen(SipMessageHeaders::HEADERS_DELIMETER));

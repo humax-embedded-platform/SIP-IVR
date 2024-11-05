@@ -8,7 +8,7 @@ MediaSession::MediaSession(std::string clientIp, int clientRtpPort, std::string 
     _callback(nullptr),
     _readDTMFThreadRunning(false)
 {
-    LOG_I << "MediaSession created for client: " << clientIp << ":" << clientRtpPort << ENDL;
+    Logger::getLogger()->info("MediaSession created for client: {}:{}", clientIp, clientRtpPort);
 }
 
 MediaSession::~MediaSession()
@@ -73,7 +73,7 @@ void MediaSession::startReadDTMF(std::shared_ptr<MediaClient> mediaClient)
             std::string dtmf = mediaClient->readDTMF(shared_from_this());
             if (dtmf.length() > 0)
             {
-                LOG_I << "DTMF: " << dtmf << ENDL;
+                Logger::getLogger()->info("DTMF: {}", dtmf);
                 if (_callback)
                 {
                     _callback->onDTMFEvent(shared_from_this(), dtmf);
