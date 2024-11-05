@@ -12,3 +12,9 @@ Implment a media server using Gstreamer, it's responsible to play some audio fil
 
   ### 3.1 IVRPJSIP
   Another IVR application which using PJSIP library, it's just a simple app for testing.
+
+
+# Build and Run
+```bash
+source launch.sh -d
+```
