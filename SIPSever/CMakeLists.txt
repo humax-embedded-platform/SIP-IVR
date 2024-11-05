@@ -39,3 +39,8 @@ target_link_libraries(SipServer -pthread spdlog)
 
 source_group("Helpers"  FILES ${HELPERS_SRC_FILES})
 source_group("SIP"      FILES ${SIP_SRC_FILES})
+
+# set install dir
+set_target_properties(SipServer PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
+)

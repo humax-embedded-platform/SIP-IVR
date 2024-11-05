@@ -81,3 +81,8 @@ install(TARGETS MediaServer
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+# set install dir
+set_target_properties(MediaServer PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
+)
