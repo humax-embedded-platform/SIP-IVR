@@ -50,3 +50,23 @@ Session::State Session::getState() const
 {
 	return _state;
 }
+
+std::string Session::curOriginTransaction() const
+{
+    return _curOriginTransaction;
+}
+
+void Session::setCurOriginTransaction(const std::string &transaction)
+{
+    _curOriginTransaction = transaction;
+}
+
+std::string Session::curReferedTransaction() const
+{
+    return _curReferedTransaction;
+}
+
+void Session::setCurReferedTransaction(const std::string &transaction)
+{
+    _curReferedTransaction = transaction;
+}

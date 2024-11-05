@@ -189,6 +189,11 @@ std::string SipMessage::getVia() const
 	return _via;
 }
 
+std::string SipMessage::getBranch() const
+{
+        return _via.substr(_via.find("branch=") + 8, _via.find(";") - _via.find("branch=") - 8);
+}
+
 std::string SipMessage::getFrom() const
 {
 	return _from;

@@ -30,6 +30,7 @@ public:
 	std::string getType() const;
 	std::string getHeader() const;
 	std::string getVia() const;
+    std::string getBranch() const;
 	std::string getFrom() const;
 	std::string getFromNumber() const;
 	std::string getTo() const;

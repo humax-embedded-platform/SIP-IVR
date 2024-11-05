@@ -32,13 +32,20 @@ public:
     std::shared_ptr<SipClient> getReferedDest() const;
 	State getState() const;
 
+    std::string curOriginTransaction() const;
+    void setCurOriginTransaction(const std::string& transaction);
+
+    std::string curReferedTransaction() const;
+    void setCurReferedTransaction(const std::string& transaction);
+
 private:
     State _state;
 	std::string _callID;
 	std::shared_ptr<SipClient> _src;
 	std::shared_ptr<SipClient> _dest;
     std::shared_ptr<SipClient> _referedDest;
-
+    std::string _curOriginTransaction;
+    std::string _curReferedTransaction;
 };
 
 #endif
