@@ -16,12 +16,18 @@ Implment a media server using Gstreamer, it's responsible to play some audio fil
 
 # II. Build and Run
 
-## Prerequisites 
+## 1. Prerequisites 
 
   ### * gstreamer
   ### * openssl
 
-## Run
+## 2. Run
 ```bash
 source launch.sh -d
 ```
+
+# III. Testing
+This project tested and supported Zoiper Softphone only, with other one, we hasn't tested yet.
+Supported media codecs:
+  - opus/48000
+  - speex/16000
