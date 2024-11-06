@@ -18,8 +18,9 @@ Implment a media server using Gstreamer, it's responsible to play some audio fil
 
 ## 1. Prerequisites 
 
-  ### * gstreamer
+  ### * gstreamer 1.16+
   ### * openssl
+  ### * cmake 3.16
 
 ## 2. Run
 ```bash
