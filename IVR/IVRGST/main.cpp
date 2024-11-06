@@ -22,8 +22,6 @@
 
 int main(int argc, char** argv)
 {
-
-
     cxxopts::Options options("IVR Application", "Open source application for an automated telephone system");
 
     options.add_options()

@@ -7,7 +7,8 @@
 #include "session/SessionManager.h"
 #include "media/MediaSession.h"
 #include "media/MediaManager.h"
-
+#include <cstdlib>
+#include <filesystem>
 
 Application::Application(std::string server_ip, int server_port, std::string app_ip, int app_port)
     : _server_ip(server_ip),
@@ -197,7 +198,9 @@ void Application::OnAck(std::shared_ptr<SipMessage> data)
         callSession->setState(CallSession::State::Connected);
         std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
         if (mediaSession) {
-            mediaSession->setPbSourceFile("~/WorkSpace/SipServer/Blob/welcome.wav");
+            std::filesystem::path media_dir(getenv("MEDIA_DIR"));
+            std::filesystem::path media_file = media_dir / "welcome.wav";
+            mediaSession->setPbSourceFile(media_file.string());
             MediaManager::getInstance()->startMediaSession(mediaSession);
         } else {
             Logger::getLogger()->error("MediaSession not found");

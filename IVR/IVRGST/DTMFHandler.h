@@ -31,7 +31,7 @@ public:
 private:
     void makeRefer(std::string agentID, std::shared_ptr<CallSession> session);
     void replayGuide();
-    void invalidChoose();
+    void invalidChoose(std::shared_ptr<CallSession> session);
 
 private:
     Application* _app;

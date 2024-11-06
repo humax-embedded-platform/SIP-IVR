@@ -1,4 +1,4 @@
-# Project structure
+# I. Project structure
 
 ## 1. SIPServer
 Implmenting a SIP proxy which will handle all request from client, IVR application and agent
@@ -14,7 +14,14 @@ Implment a media server using Gstreamer, it's responsible to play some audio fil
   Another IVR application which using PJSIP library, it's just a simple app for testing.
 
 
-# Build and Run
+# II. Build and Run
+
+## Prerequisites 
+
+  ### * gstreamer
+  ### * openssl
+
+## Run
 ```bash
 source launch.sh -d
 ```

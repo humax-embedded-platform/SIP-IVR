@@ -6,6 +6,8 @@
 #include "SipSdpMessage.hpp"
 #include "Application.hpp"
 #include "AppDefines.h"
+#include <filesystem>
+#include <chrono>
 
 DTMFHandler::DTMFHandler(Application* app) : _app(app) {}
 
@@ -34,7 +36,7 @@ void DTMFHandler::onDTMFEvent(std::shared_ptr<MediaSession> session, std::string
         makeRefer("agent5", callSession);
         break;
     default:
-        invalidChoose();
+        invalidChoose(callSession);
         break;
     }
 }
@@ -43,7 +45,9 @@ void DTMFHandler::makeRefer(std::string agentID, std::shared_ptr<CallSession> se
 {
     Logger::getLogger()->info("Making refer to agent: {}", agentID);
     std::shared_ptr<MediaSession> mediaSession = session->getMediaSession();
-    mediaSession->setPbSourceFile("~/WorkSpace/SipServer/Blob/redirecting.wav");
+    std::filesystem::path media_dir(getenv("MEDIA_DIR"));
+    std::filesystem::path media_file = media_dir / "redirecting.wav";
+    mediaSession->setPbSourceFile(media_file.string());
     MediaManager::getInstance()->updateMediaSession(mediaSession);
 
 
@@ -66,7 +70,18 @@ void DTMFHandler::replayGuide()
 
 }
 
-void DTMFHandler::invalidChoose()
+void DTMFHandler::invalidChoose(std::shared_ptr<CallSession> session)
 {
+    std::shared_ptr<MediaSession> mediaSession = session->getMediaSession();
+    std::filesystem::path media_dir(getenv("MEDIA_DIR"));
+    std::filesystem::path media_file = media_dir / "selection_unavailable.wav";
+    mediaSession->setPbSourceFile(media_file.string());
+    MediaManager::getInstance()->updateMediaSession(mediaSession);
 
+    // delay 5s
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
+    media_file = media_dir / "welcome.wav";
+    mediaSession->setPbSourceFile(media_file.string());
+    MediaManager::getInstance()->updateMediaSession(mediaSession);
 }
