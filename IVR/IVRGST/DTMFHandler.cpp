@@ -18,7 +18,7 @@ void DTMFHandler::onDTMFEvent(std::shared_ptr<MediaSession> session, std::string
     Logger::getLogger()->info("DTMF number: {}", number);
     switch (number) {
     case KEY_0:
-        replayGuide();
+        replayGuide(callSession);
         break;
     case KEY_1:
         makeRefer("agent1", callSession);
@@ -65,9 +65,13 @@ void DTMFHandler::makeRefer(std::string agentID, std::shared_ptr<CallSession> se
     _app->sendToServer(refer);
 }
 
-void DTMFHandler::replayGuide()
+void DTMFHandler::replayGuide(std::shared_ptr<CallSession> session)
 {
-
+    std::shared_ptr<MediaSession> mediaSession = session->getMediaSession();
+    std::filesystem::path media_dir(getenv("MEDIA_DIR"));
+    std::filesystem::path media_file = media_dir / "welcome.wav";
+    mediaSession->setPbSourceFile(media_file.string());
+    MediaManager::getInstance()->updateMediaSession(mediaSession);
 }
 
 void DTMFHandler::invalidChoose(std::shared_ptr<CallSession> session)
