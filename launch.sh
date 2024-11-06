@@ -29,13 +29,13 @@ run() {
     echo "Local IP: $local_ip"
 
     # Set media directory to environment variable
+    export MEDIA_DIR=$(pwd)/blob
 
     cd bin
     echo "Run SIP Server on $local_ip:5060"
     gnome-terminal -- bash -c "./SipServer --ip=$local_ip"
 
     echo "Run IVR Application on $local_ip"
-    export MEDIA_DIR=$(pwd)/blob
     gnome-terminal -- bash -c "./IVRServer -i $local_ip -p 5060 -c $local_ip -m 10000"
 
     echo "Run Media Server on $local_ip:9999, RTP port: 10000"

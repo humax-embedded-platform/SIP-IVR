@@ -45,6 +45,9 @@ Application::Application(std::string server_ip, int server_port, std::string app
         }
     });
     _dtmfHandler = std::make_shared<DTMFHandler>(this);
+
+    std::filesystem::path media_dir(getenv("MEDIA_DIR"));
+    Logger::getLogger()->info("Media dir: {}", media_dir.string());
 }
 
 std::string Application::serverHost() const
