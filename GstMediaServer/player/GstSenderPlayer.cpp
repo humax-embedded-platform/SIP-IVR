@@ -1,8 +1,78 @@
 #include "GstSenderPlayer.h"
+#include <atomic>
+#include <fstream>
+#include <glib.h>
+#include <gst/gst.h>
+#include <stdlib.h>
 
 #define TAG "GstSenderPlayer"
 
-GstSenderPlayer::GstSenderPlayer() : GstBasePlayer() {}
+std::atomic<bool> file_changed(false);
+
+
+void need_data_callback(GstElement *appsrc, guint length, gpointer user_data) {
+    FileContext &fileContext = *(FileContext *)user_data;
+
+    // If file_changed is true, close the current file and open the new file
+    if (file_changed.load()) {
+        spdlog::info("File changed, opening new file: {}", fileContext.file_path);
+        fileContext.file_size = 0;
+        fileContext.offset = 0;
+        file_changed = false;
+    }
+
+    FILE *file;
+    unsigned char buffer[length];
+    size_t bytes_read;
+
+    file = fopen(fileContext.file_path.c_str(), "rb");
+    if (file == NULL) {
+        spdlog::error("Failed to open file: {}", fileContext.file_path);
+        return;
+    }
+
+    if (!fileContext.file_size) {
+        fseek(file, 0, SEEK_END);
+        fileContext.file_size = ftell(file);
+        fseek(file, 0, SEEK_SET);
+    }
+
+    if (fileContext.offset >= fileContext.file_size) {
+        spdlog::info("End of file reached -> replaying from the beginning");
+        fileContext.offset = 0;
+    }
+
+    // Move the file pointer to the specified offset
+    if (fseek(file, fileContext.offset, SEEK_SET) != 0) {
+        perror("Error seeking file");
+        fclose(file);
+        return;
+    }
+
+
+    memset(buffer, 0, sizeof(buffer));
+    if ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0) {
+        spdlog::info("Read {} bytes from file from offset {} in total {} bytes", bytes_read, fileContext.offset, fileContext.file_size);
+        GstBuffer *gst_buffer = gst_buffer_new_allocate(NULL, bytes_read, NULL);
+        gst_buffer_fill(gst_buffer, 0, buffer, bytes_read);
+
+        GstFlowReturn ret;
+        g_signal_emit_by_name(appsrc, "push-buffer", gst_buffer, &ret);
+        gst_buffer_unref(gst_buffer);
+
+        if (ret != GST_FLOW_OK) {
+            spdlog::error("Error pushing buffer to appsrc!");
+        }
+
+        fileContext.offset += bytes_read;
+    }
+    fclose(file);
+}
+
+GstSenderPlayer::GstSenderPlayer(std::string host, int port) : GstBasePlayer() {
+    _host = host;
+    _port = port;
+}
 
 GstSenderPlayer::~GstSenderPlayer()
 {
@@ -11,8 +81,63 @@ GstSenderPlayer::~GstSenderPlayer()
 
 void GstSenderPlayer::initPipeline()
 {
+    if (_context->_pipeline) {
+        spdlog::error("{}::Pipeline already initialized", TAG);
+        return;
+    }
+
     spdlog::info("{}::Initializing pipeline", TAG);
-    _context->_pipeline = gst_parse_launch(_launchCmd.c_str(), nullptr);
+    _context->_pipeline = gst_pipeline_new("audio-pipeline");
+    GstElement *appsrc = gst_element_factory_make("appsrc", "audio-source");
+    GstElement *audioconvert = gst_element_factory_make("audioconvert", "convert");
+    GstElement *audioresample = gst_element_factory_make("audioresample", "resample");
+    GstElement *opusenc = gst_element_factory_make("opusenc", "encoder");
+    GstElement *rtpopuspay = gst_element_factory_make("rtpopuspay", "rtp-payload");
+    GstElement *udpsink = gst_element_factory_make("udpsink", "udp-sink");
+
+     if (!_context->_pipeline || !appsrc || !audioconvert || !audioresample || !opusenc || !rtpopuspay || !udpsink) {
+         spdlog::error("{}::Not all elements could be created.", TAG);
+        return;
+    }
+
+    // Configure appsrc
+    g_object_set(G_OBJECT(appsrc),
+                 "format", GST_FORMAT_TIME,
+                 "is-live", TRUE,
+                 "block", TRUE,
+                 NULL);
+
+    GstCaps *caps = gst_caps_new_simple("audio/x-raw",
+                                        "format", G_TYPE_STRING, "S16LE",
+                                        "rate", G_TYPE_INT, 24000,
+                                        "channels", G_TYPE_INT, 1,
+                                        "channel-mask", GST_TYPE_BITMASK, 0x4,
+                                        "layout", G_TYPE_STRING, "interleaved",
+                                        NULL);
+    g_object_set(appsrc, "caps", caps, NULL);
+    gst_caps_unref(caps);
+
+    // Configure udpsink
+    g_object_set(G_OBJECT(udpsink),
+                 "host", _host.c_str(),
+                 "port", _port,
+                 "async", FALSE,
+                 NULL);
+
+    // set payload type
+    g_object_set(G_OBJECT(rtpopuspay), "pt", 106, NULL);
+
+    // Build the pipeline
+    gst_bin_add_many(GST_BIN(_context->_pipeline), appsrc, audioconvert, audioresample, opusenc, rtpopuspay, udpsink, NULL);
+    if (!gst_element_link_many(appsrc, audioconvert, audioresample, opusenc, rtpopuspay, udpsink, NULL)) {
+        spdlog::error("{}::Elements could not be linked.", TAG);
+        gst_object_unref(_context->_pipeline);
+        return;
+    }
+
+    // Set need-data signal handler for appsrc
+    g_signal_connect(appsrc, "need-data", G_CALLBACK(need_data_callback), &_fileContext);
+
 
     // set pipeline to NULL state
     gst_element_set_state(_context->_pipeline, GST_STATE_NULL);
@@ -30,18 +155,14 @@ void GstSenderPlayer::destroyPipeline()
 
 void GstSenderPlayer::setPBSourceFile(const std::string &sourceFile)
 {
-    if (_context->_pipeline) {
-        gst_element_set_state(_context->_pipeline, GST_STATE_NULL);
-
-        GstElement *filesrc = gst_bin_get_by_name(GST_BIN(_context->_pipeline), "source");
-        if (!filesrc) {
-            spdlog::error("Failed to get filesrc element");
-            return;
+    if (!sourceFile.empty()) {
+        spdlog::info("Setting source file: {}", sourceFile);
+        if (!_fileContext.file_path.empty() && sourceFile != _fileContext.file_path ) {
+            file_changed = true;
         }
-        g_object_set(G_OBJECT(filesrc), "location", sourceFile.c_str(), nullptr);
-        gst_object_unref(filesrc);
-
-        gst_element_set_state(_context->_pipeline, GST_STATE_PLAYING);
+        _fileContext.file_path = sourceFile;
+        _fileContext.file_size = 0;
+        _fileContext.offset = 0;
     }
 }
 
@@ -90,46 +211,6 @@ gboolean GstSenderPlayer::onBusCallback(GstBus *bus, GstMessage *message, gpoint
                               GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
             spdlog::error("Failed to seek to start");
         }
-        break;
-    }
-    case GST_MESSAGE_ELEMENT: //gstdtmfdemay event..
-    {
-        spdlog::info("dtmf event detected");
-        const GstStructure * structure = gst_message_get_structure(message);
-
-        auto cb = [](GQuark field, const GValue *value, gpointer user_data) -> gboolean {
-            // GstPlayer * player = (GstPlayer *)user_data;
-            // GstElement * pipeline = core->pipeline;
-
-
-            // gchar *str = (char *)gst_value_serialize (value);
-            // const char* fieldname = g_quark_to_string (field);
-            // if(strcmp(fieldname, "number") == 0){
-            //     auto response = web::json::value::object();
-            //     response["tool_inf"]["inf_type"] = web::json::value::string("event");
-            //     response["tool_inf"]["tool_id"] = web::json::value::number(core->tool_id);
-            //     response["tool_inf"]["data"]["type"] = web::json::value::string("RTP_event_detected");
-            //     response["tool_inf"]["data"]["event"] = web::json::value::string(std::string{"DTMF"} + std::string{str});
-
-            //     auto rsp = response.serialize();
-            //     uint32_t rsp_len = rsp.length();
-            //     std::vector<boost::asio::const_buffer> buffers;
-            //     buffers.push_back(boost::asio::buffer(&rsp_len, sizeof(rsp_len)));
-            //     buffers.push_back(boost::asio::buffer(rsp, rsp_len));
-
-            //     boost::asio::async_write(core->sock, buffers,
-            //                              [](const boost::system::error_code & error, size_t len){
-            //                                  if(error){
-            //                                      return;
-            //                                  }
-            //                              });
-
-            // }
-            // g_print ("%15s: %s\n", fieldname, str);
-            // g_free (str);
-            return (gboolean)TRUE;
-        };
-        gst_structure_foreach(structure, cb, player);
         break;
     }
     default:

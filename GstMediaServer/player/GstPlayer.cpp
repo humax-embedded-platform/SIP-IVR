@@ -161,7 +161,7 @@ void GstPlayer::initPlayer()
         }
 
         spdlog::info("GstSenderPlayer command: {}", cmd);
-        _senderPlayer = std::make_shared<GstSenderPlayer>();
+        _senderPlayer = std::make_shared<GstSenderPlayer>(_rtpHost, _rtpPort);
         _senderPlayer->setLaunchCmd(cmd);
     }
 

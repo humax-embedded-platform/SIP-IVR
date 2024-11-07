@@ -20,9 +20,20 @@ run() {
 
     # Kill previous process
     echo "Kill previous process"
-    pkill -9 IVRServer
-    pkill -9 MediaServer
-    pkill -9 SipServer
+    if pgrep -x "IVRServer" > /dev/null
+    then
+        pkill -9 IVRServer
+    fi
+
+    if pgrep -x "MediaServer" > /dev/null
+    then
+        pkill -9 MediaServer
+    fi
+
+    if pgrep -x "SipServer" > /dev/null
+    then
+        pkill -9 SipServer
+    fi
 
     # Get local IP
     local_ip=$(hostname -I | awk '{print $1}')
@@ -36,6 +47,8 @@ run() {
     gnome-terminal -- bash -c "./SipServer --ip=$local_ip"
 
     echo "Run IVR Application on $local_ip"
+    ## open terminal with set name for terminal
+    
     gnome-terminal -- bash -c "./IVRServer -i $local_ip -p 5060 -c $local_ip -m 10000"
 
     echo "Run Media Server on $local_ip:9999, RTP port: 10000"
@@ -59,4 +72,4 @@ while getopts ":dh" option; do
     esac
 done
 
-run
+# run
