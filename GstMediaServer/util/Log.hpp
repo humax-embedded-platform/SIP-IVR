@@ -65,7 +65,7 @@ public:
 #else
             auto max_size = 1048576 * 5;
             auto max_files = 3;
-            logger = spdlog::rotating_logger_mt("ss_logger", "logs/sip_server_rotating.txt", max_size, max_files);
+            logger = spdlog::rotating_logger_mt("ms_logger", "logs/media_server_rotating.txt", max_size, max_files);
 #endif
             spdlog::enable_backtrace(32);
 

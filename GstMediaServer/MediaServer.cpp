@@ -4,20 +4,20 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include "spdlog/spdlog.h"
+#include "util/Log.hpp"
 #include "RequestHandler.h"
 
 MediaServer::MediaServer(int port) : _serverPort(port)
 {
     _requestHandler = std::make_shared<RequestHandler>();
-    spdlog::info("Creating server ...");
+    Logger::getLogger()->info("Creating server ...");
     std::thread t(&MediaServer::startServer, this);
     t.join();
 }
 
 void MediaServer::startServer()
 {
-    spdlog::info("Starting server ...");
+    Logger::getLogger()->info("Starting server ...");
     int server_fd = _serverFd;
     int port = _serverPort;
 
@@ -26,12 +26,12 @@ void MediaServer::startServer()
     int addrlen = sizeof(address);
 
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        spdlog::error("Socket failed");
+        Logger::getLogger()->error("Socket failed");
         return;
     }
 
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-        spdlog::error("setsockopt failed");
+        Logger::getLogger()->error("setsockopt failed");
         close(server_fd);
         return;
     }
@@ -41,23 +41,23 @@ void MediaServer::startServer()
     address.sin_port = htons(port);
 
     if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
-        spdlog::error("Bind failed");
+        Logger::getLogger()->error("Bind failed");
         close(server_fd);
         return;
     }
 
     if (listen(server_fd, 10) < 0) {
-        spdlog::error("Listen failed");
+        Logger::getLogger()->error("Listen failed");
         close(server_fd);
         return;
     }
 
-    spdlog::info("Server is listening on port {} ...", port);
+    Logger::getLogger()->info("Server is listening on port {} ...", port);
 
     int new_socket = -1;
     while (true) {
         if ((new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
-            spdlog::error("Accept failed");
+            Logger::getLogger()->error("Accept failed");
             close(server_fd);
             return;
         }
@@ -74,7 +74,7 @@ void MediaServer::handleConnection(int clientFd)
     char buffer[1024] = {0};
     int valRead = read(clientFd, buffer, 1024);
     if (valRead < 0) {
-        spdlog::error("Read failed");
+        Logger::getLogger()->error("Read failed");
         return;
     }
     _requestHandler->handleRequest(clientFd, buffer, valRead);

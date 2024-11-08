@@ -45,7 +45,7 @@ bool GstBasePlayer::close()
 
     INVOKE_WITH_MAIN_CONTEXT_DEFAULT(_context->_context, closeOnMainCtx, this);
     while (_context->_loop && g_main_loop_is_running(_context->_loop)) {
-        spdlog::info("Waiting for player thread to stop ...");
+        Logger::getLogger()->info("Waiting for player thread to stop ...");
         g_usleep(1000000); //sleep for 1 second
     }
     _isOpened = false;
@@ -79,9 +79,9 @@ gpointer GstBasePlayer::onBasePlayerThreadStarted(gpointer data)
 
     player->onPlayerThreadStarted(data);
 
-    spdlog::info("Starting main loop ...");
+    Logger::getLogger()->info("Starting main loop ...");
     g_main_loop_run(player->_context->_loop);
-    spdlog::info("Main loop stopped");
+    Logger::getLogger()->info("Main loop stopped");
 
     MUTEX_LOCK(&player->_context->_lock);
     while (g_main_context_iteration(player->_context->_context, FALSE)) {}
@@ -100,7 +100,7 @@ gpointer GstBasePlayer::onBasePlayerThreadStarted(gpointer data)
     g_main_context_unref(player->_context->_context);
     player->_context->_context = nullptr;
 
-    spdlog::info("Player thread stopped");
+    Logger::getLogger()->info("Player thread stopped");
     g_thread_exit(NULL);
     return NULL;
 }
@@ -111,13 +111,13 @@ gboolean GstBasePlayer::onMainLoopStarted(gpointer data)
     MUTEX_LOCK(&player->_context->_lock);
     g_cond_signal(&player->_context->_cond);
     MUTEX_UNLOCK(&player->_context->_lock);
-    spdlog::info("Main loop started");
+    Logger::getLogger()->info("Main loop started");
     return G_SOURCE_REMOVE;
 }
 
 gboolean GstBasePlayer::playOnMainCtx(gpointer data)
 {
-    spdlog::info("Playing ...");
+    Logger::getLogger()->info("Playing ...");
     GstBasePlayer* player = (GstBasePlayer*)data;
     // change state to playing
     gst_element_set_state(player->_context->_pipeline, GST_STATE_PLAYING);
@@ -126,7 +126,7 @@ gboolean GstBasePlayer::playOnMainCtx(gpointer data)
 
 gboolean GstBasePlayer::stopOnMainCtx(gpointer data)
 {
-    spdlog::info("Stopping ...");
+    Logger::getLogger()->info("Stopping ...");
     GstBasePlayer* player = (GstBasePlayer*)data;
     // change state to null
     gst_element_set_state(player->_context->_pipeline, GST_STATE_NULL);
@@ -135,10 +135,10 @@ gboolean GstBasePlayer::stopOnMainCtx(gpointer data)
 
 gboolean GstBasePlayer::closeOnMainCtx(gpointer data)
 {
-    spdlog::info("Closing ...");
+    Logger::getLogger()->info("Closing ...");
     GstBasePlayer* player = (GstBasePlayer*)data;
     if (!player->isOpened()) {
-        spdlog::error("Player is not opened");
+        Logger::getLogger()->error("Player is not opened");
         return G_SOURCE_REMOVE;
     }
 

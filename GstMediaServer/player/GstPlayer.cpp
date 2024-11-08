@@ -1,6 +1,6 @@
 #include "GstPlayer.h"
 #include <gst/gst.h>
-#include <spdlog/spdlog.h>
+#include "util/Log.hpp"
 #include "util/FileUtil.h"
 #include "GstSenderPlayer.h"
 #include "GstReceiverPlayer.h"
@@ -37,31 +37,31 @@ void GstPlayer::setRtpHost(std::string host)
 
 void GstPlayer::setCodec(std::string codec)
 {
-    spdlog::info("Setting codec: {}", codec);
+    Logger::getLogger()->info("Setting codec: {}", codec);
     _codec = codec;
 }
 
 void GstPlayer::setPayloadType(int payloadType)
 {
-    spdlog::info("Setting payload type: {}", payloadType);
+    Logger::getLogger()->info("Setting payload type: {}", payloadType);
     _payloadType = payloadType;
 }
 
 void GstPlayer::setSampleRate(int sampleRate)
 {
-    spdlog::info("Setting sample rate: {}", sampleRate);
+    Logger::getLogger()->info("Setting sample rate: {}", sampleRate);
     _sampleRate = sampleRate;
 }
 
 void GstPlayer::setPBSourceFile(std::string sourceFile)
 {
     if (sourceFile.empty()) {
-        spdlog::error("Source file is empty");
+        Logger::getLogger()->error("Source file is empty");
         return;
     }
 
     auto absPath = FileUtil::absolutePath(sourceFile);
-    spdlog::info("Setting playback source file: {}", absPath);
+    Logger::getLogger()->info("Setting playback source file: {}", absPath);
 
     _pbSourceFile = absPath;
 
@@ -73,7 +73,7 @@ void GstPlayer::setPBSourceFile(std::string sourceFile)
 bool GstPlayer::open()
 {
     if (_rtpPort == 0 || _rtpHost.empty()) {
-        spdlog::error("RTP host or port not set");
+        Logger::getLogger()->error("RTP host or port not set");
         return false;
     }
 
@@ -90,7 +90,7 @@ bool GstPlayer::open()
 
 bool GstPlayer::start()
 {
-    spdlog::info("Starting player ...");
+    Logger::getLogger()->info("Starting player ...");
     if (_senderPlayer) {
         _senderPlayer->start();
     }
@@ -139,13 +139,13 @@ void GstPlayer::clearDTMFEvent()
 
 void GstPlayer::initPlayer()
 {
-    spdlog::info("initPlayer");
+    Logger::getLogger()->info("initPlayer");
     if (!_senderPlayer) {
         std::string cmd;
 
         // check parameters is missing
         if (_codec.empty() || _payloadType == 0 || _sampleRate == 0) {
-            spdlog::error("Missing parameters");
+            Logger::getLogger()->error("Missing parameters");
             return;
         }
 
@@ -156,11 +156,11 @@ void GstPlayer::initPlayer()
             cmd = std::string("filesrc name=source") + _pbSourceFile + " ! wavparse ! audioconvert ! audioresample ! audio/x-raw,rate=" + std::to_string(_sampleRate) + " ! speexenc ! rtpspeexpay pt=" +
                   std::to_string(_payloadType) + " ! udpsink host=" + _rtpHost + " port=" + std::to_string(_rtpPort);
         } else {
-            spdlog::error("Unsupported codec");
+            Logger::getLogger()->error("Unsupported codec");
             return;
         }
 
-        spdlog::info("GstSenderPlayer command: {}", cmd);
+        Logger::getLogger()->info("GstSenderPlayer command: {}", cmd);
         _senderPlayer = std::make_shared<GstSenderPlayer>(_rtpHost, _rtpPort);
         _senderPlayer->setLaunchCmd(cmd);
     }
@@ -168,7 +168,7 @@ void GstPlayer::initPlayer()
     if (!_receiverPlayer) {
         _receiverPlayer = std::make_shared<GstReceiverPlayer>();
         std::string cmd = "rtpbin name=rtpbin  udpsrc name=udpsrc caps=application/x-rtp !  rtpbin.recv_rtp_sink_0 rtpbin.  rtpdtmfdepay name=rtpdtmfdepay ! fakesink name=fakesink";
-        spdlog::info("GstReceiverPlayer command: {}", cmd);
+        Logger::getLogger()->info("GstReceiverPlayer command: {}", cmd);
         _receiverPlayer->setLaunchCmd(cmd);
     }
 }

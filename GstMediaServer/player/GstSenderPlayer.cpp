@@ -4,6 +4,7 @@
 #include <glib.h>
 #include <gst/gst.h>
 #include <stdlib.h>
+#include "util/Log.hpp"
 
 #define TAG "GstSenderPlayer"
 
@@ -15,7 +16,7 @@ void need_data_callback(GstElement *appsrc, guint length, gpointer user_data) {
 
     // If file_changed is true, close the current file and open the new file
     if (file_changed.load()) {
-        spdlog::info("File changed, opening new file: {}", fileContext.file_path);
+        Logger::getLogger()->info("File changed, opening new file: {}", fileContext.file_path);
         fileContext.file_size = 0;
         fileContext.offset = 0;
         file_changed = false;
@@ -27,7 +28,7 @@ void need_data_callback(GstElement *appsrc, guint length, gpointer user_data) {
 
     file = fopen(fileContext.file_path.c_str(), "rb");
     if (file == NULL) {
-        spdlog::error("Failed to open file: {}", fileContext.file_path);
+        Logger::getLogger()->error("Failed to open file: {}", fileContext.file_path);
         return;
     }
 
@@ -38,7 +39,7 @@ void need_data_callback(GstElement *appsrc, guint length, gpointer user_data) {
     }
 
     if (fileContext.offset >= fileContext.file_size) {
-        spdlog::info("End of file reached -> replaying from the beginning");
+        Logger::getLogger()->info("End of file reached -> replaying from the beginning");
         fileContext.offset = 0;
     }
 
@@ -52,7 +53,7 @@ void need_data_callback(GstElement *appsrc, guint length, gpointer user_data) {
 
     memset(buffer, 0, length);
     if ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0) {
-        // spdlog::info("Read {} bytes from file from offset {} in total {} bytes", bytes_read, fileContext.offset, fileContext.file_size);
+        // Logger::getLogger()->info("Read {} bytes from file from offset {} in total {} bytes", bytes_read, fileContext.offset, fileContext.file_size);
         GstBuffer *gst_buffer = gst_buffer_new_allocate(NULL, bytes_read, NULL);
         gst_buffer_fill(gst_buffer, 0, buffer, bytes_read);
 
@@ -61,7 +62,7 @@ void need_data_callback(GstElement *appsrc, guint length, gpointer user_data) {
         gst_buffer_unref(gst_buffer);
 
         if (ret != GST_FLOW_OK) {
-            spdlog::error("Error pushing buffer to appsrc!");
+            Logger::getLogger()->error("Error pushing buffer to appsrc!");
         }
 
         fileContext.offset += bytes_read;
@@ -82,11 +83,11 @@ GstSenderPlayer::~GstSenderPlayer()
 void GstSenderPlayer::initPipeline()
 {
     if (_context->_pipeline) {
-        spdlog::error("{}::Pipeline already initialized", TAG);
+        Logger::getLogger()->error("{}::Pipeline already initialized", TAG);
         return;
     }
 
-    spdlog::info("{}::Initializing pipeline", TAG);
+    Logger::getLogger()->info("{}::Initializing pipeline", TAG);
     _context->_pipeline = gst_pipeline_new("audio-pipeline");
     GstElement *appsrc = gst_element_factory_make("appsrc", "audio-source");
     GstElement *audioconvert = gst_element_factory_make("audioconvert", "convert");
@@ -96,7 +97,7 @@ void GstSenderPlayer::initPipeline()
     GstElement *udpsink = gst_element_factory_make("udpsink", "udp-sink");
 
      if (!_context->_pipeline || !appsrc || !audioconvert || !audioresample || !opusenc || !rtpopuspay || !udpsink) {
-         spdlog::error("{}::Not all elements could be created.", TAG);
+         Logger::getLogger()->error("{}::Not all elements could be created.", TAG);
         return;
     }
 
@@ -130,7 +131,7 @@ void GstSenderPlayer::initPipeline()
     // Build the pipeline
     gst_bin_add_many(GST_BIN(_context->_pipeline), appsrc, audioconvert, audioresample, opusenc, rtpopuspay, udpsink, NULL);
     if (!gst_element_link_many(appsrc, audioconvert, audioresample, opusenc, rtpopuspay, udpsink, NULL)) {
-        spdlog::error("{}::Elements could not be linked.", TAG);
+        Logger::getLogger()->error("{}::Elements could not be linked.", TAG);
         gst_object_unref(_context->_pipeline);
         return;
     }
@@ -145,7 +146,7 @@ void GstSenderPlayer::initPipeline()
 
 void GstSenderPlayer::destroyPipeline()
 {
-    spdlog::info("Destroying pipeline");
+    Logger::getLogger()->info("Destroying pipeline");
     if (_context->_pipeline) {
         gst_element_set_state(_context->_pipeline, GST_STATE_NULL);
         gst_object_unref(_context->_pipeline);
@@ -156,7 +157,7 @@ void GstSenderPlayer::destroyPipeline()
 void GstSenderPlayer::setPBSourceFile(const std::string &sourceFile)
 {
     if (!sourceFile.empty()) {
-        spdlog::info("Setting source file: {}", sourceFile);
+        Logger::getLogger()->info("Setting source file: {}", sourceFile);
         if (!_fileContext.file_path.empty() && sourceFile != _fileContext.file_path ) {
             file_changed = true;
         }
@@ -168,7 +169,7 @@ void GstSenderPlayer::setPBSourceFile(const std::string &sourceFile)
 
 gpointer GstSenderPlayer::onPlayerThreadStarted(gpointer data)
 {
-    spdlog::info("GstSenderPlayer thread started");
+    Logger::getLogger()->info("GstSenderPlayer thread started");
     return nullptr;
 }
 
@@ -176,14 +177,14 @@ gboolean GstSenderPlayer::onBusCallback(GstBus *bus, GstMessage *message, gpoint
 {
     GstSenderPlayer * player = (GstSenderPlayer *)data;
     GstElement * pipeline = player->_context->_pipeline;
-    spdlog::info("############# Got {} message.. src:{}", GST_MESSAGE_TYPE_NAME (message), gst_element_get_name (message->src));
+    Logger::getLogger()->info("############# Got {} message.. src:{}", GST_MESSAGE_TYPE_NAME (message), gst_element_get_name (message->src));
 
     switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_STATE_CHANGED:
     {
         GstState old_state, new_state, pending_state;
         gst_message_parse_state_changed(message, &old_state, &new_state, &pending_state);
-        spdlog::info("{}'s state change to {} from {} with {} pending",
+        Logger::getLogger()->info("{}'s state change to {} from {} with {} pending",
                      gst_element_get_name (message->src),
                      gst_element_state_get_name(new_state),
                      gst_element_state_get_name(old_state),
@@ -197,7 +198,7 @@ gboolean GstSenderPlayer::onBusCallback(GstBus *bus, GstMessage *message, gpoint
         gchar *debug;
 
         gst_message_parse_error (message, &err, &debug);
-        spdlog::error("########  Error: {}", err->message);
+        Logger::getLogger()->error("########  Error: {}", err->message);
         g_error_free (err);
         g_free (debug);
         break;
@@ -209,7 +210,7 @@ gboolean GstSenderPlayer::onBusCallback(GstBus *bus, GstMessage *message, gpoint
                               (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE),
                               GST_SEEK_TYPE_SET, 0,
                               GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
-            spdlog::error("Failed to seek to start");
+            Logger::getLogger()->error("Failed to seek to start");
         }
         break;
     }

@@ -11,6 +11,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(spdlog)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-DDEBUG_MODE)
+endif()
 
 set(CMAKE_AUTOUIC OFF)
 set(CMAKE_AUTOMOC OFF)
@@ -18,6 +21,8 @@ set(CMAKE_AUTORCC OFF)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 
 include_directories(.)
 include_directories(./include)
@@ -54,6 +59,7 @@ set(LIBS
     ${GSTAUDIO_LDFLAGS}
     ${OPENSSL_LDFLAGS}
     spdlog
+    dl
 )
 
 add_executable(MediaServer

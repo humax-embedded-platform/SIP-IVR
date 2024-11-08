@@ -1,6 +1,6 @@
 #include "MediaSession.h"
 #include "util/HashUtil.h"
-#include "spdlog/spdlog.h"
+#include "util/Log.hpp"
 #include "player/GstPlayer.h"
 
 MediaSession::MediaSession(std::string remoteHost, int remotePort, int localPort):
@@ -12,7 +12,7 @@ MediaSession::MediaSession(std::string remoteHost, int remotePort, int localPort
     _player = std::make_shared<GstPlayer>();
     _player->setRtpHost(_remoteHost);
     _player->setRtpPort(_remotePort);
-    spdlog::info("Created session with ID {}", _sessionID);
+    Logger::getLogger()->info("Created session with ID {}", _sessionID);
 }
 
 std::string MediaSession::sessionID() const
@@ -54,7 +54,7 @@ void MediaSession::setMediaDescription(std::string sdp)
         _player->setPayloadType(std::stoi(payloadType));
         _player->setCodec(codec);
         _player->setSampleRate(std::stoi(sampleRate));
-        spdlog::info("Media description set: payloadType: {}, codec: {}, sampleRate: {}", payloadType, codec, sampleRate);
+        Logger::getLogger()->info("Media description set: payloadType: {}, codec: {}, sampleRate: {}", payloadType, codec, sampleRate);
     }
 }
 

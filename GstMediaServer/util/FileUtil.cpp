@@ -1,7 +1,7 @@
 #include "FileUtil.h"
 #include <filesystem>
 #include <gst/gst.h>
-#include "spdlog/spdlog.h"
+#include "util/Log.hpp"
 
 FileUtil::FileUtil() {}
 

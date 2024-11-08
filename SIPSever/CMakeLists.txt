@@ -9,6 +9,8 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
+
 include(FetchContent)
 FetchContent_Declare(
     spdlog
@@ -35,7 +37,7 @@ file(GLOB_RECURSE SIP_SRC
 
 include_directories(${HELPERS_SRC_FILES} ${SIP_SRC_FILES})
 add_executable (SipServer "main.cpp" ${SIP_SRC} ${HELPERS_SRC} )
-target_link_libraries(SipServer -pthread spdlog)
+target_link_libraries(SipServer -pthread spdlog dl)
 
 source_group("Helpers"  FILES ${HELPERS_SRC_FILES})
 source_group("SIP"      FILES ${SIP_SRC_FILES})

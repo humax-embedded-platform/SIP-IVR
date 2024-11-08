@@ -16,6 +16,8 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
+
 include(FetchContent)
 FetchContent_Declare(
     spdlog
@@ -59,7 +61,7 @@ add_executable(IVRServer
   helpers/NetUtil.h helpers/NetUtil.cpp
 )
 
-target_link_libraries(IVRServer spdlog)
+target_link_libraries(IVRServer spdlog dl)
 
 include(GNUInstallDirs)
 install(TARGETS IVRServer

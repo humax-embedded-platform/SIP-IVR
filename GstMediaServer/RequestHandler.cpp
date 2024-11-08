@@ -1,5 +1,5 @@
 #include "RequestHandler.h"
-#include "spdlog/spdlog.h"
+#include "util/Log.hpp"
 #include "SessionManager.h"
 #include "json.hpp"
 #include "MediaSession.h"
@@ -16,7 +16,7 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
     Request req;
     if (!parseRequest(buffer, len, req))
     {
-        spdlog::error("Invalid request");
+        Logger::getLogger()->error("Invalid request");
         Response res;
         res.success = false;
         res.type = req.type;
@@ -27,7 +27,7 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
     }
 
     if (req.type == REQUEST_TYPE_INIT_SESSION) {
-        spdlog::info("Handling init_session request ...");
+        Logger::getLogger()->info("Handling init_session request ...");
         json data = json::parse(req.data);
         auto _sessionManager = SessionManager::getInstance();
         std::shared_ptr<MediaSession> session = _sessionManager->createSession(data[REMOTE_HOST], data[REMOTE_PORT]);
@@ -54,10 +54,10 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
             res.sessionID = session->sessionID();
             res.data = session->sessionID();
         }
-        spdlog::info("init_session response: {}", res.sessionID);
+        Logger::getLogger()->info("init_session response: {}", res.sessionID);
         sendResponse(conectionFd, res);
     } else if (req.type == REQUEST_TYPE_START_SESSION) {
-        spdlog::info("Handling start_session request ... {}", req.sessionID);
+        Logger::getLogger()->info("Handling start_session request ... {}", req.sessionID);
         auto _sessionManager = SessionManager::getInstance();
         std::shared_ptr<MediaSession> session = _sessionManager->getSession(req.sessionID);
         Response res;
@@ -82,7 +82,7 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
         res.data = "Session started";
         sendResponse(conectionFd, res);
     } else if (req.type == REQUEST_TYPE_STOP_SESSION) {
-        spdlog::info("Handling stop_session request ...{}", req.sessionID);
+        Logger::getLogger()->info("Handling stop_session request ...{}", req.sessionID);
         auto _sessionManager = SessionManager::getInstance();
         std::shared_ptr<MediaSession> session = _sessionManager->getSession(req.sessionID);
         Response res;
@@ -103,7 +103,7 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
         res.data = "Session stopped";
         sendResponse(conectionFd, res);
     } else if (req.type == REQUEST_TYPE_UPDATE_SESSION) {
-        spdlog::info("Handling update_session request ...{}", req.sessionID);
+        Logger::getLogger()->info("Handling update_session request ...{}", req.sessionID);
         auto _sessionManager = SessionManager::getInstance();
         std::shared_ptr<MediaSession> session = _sessionManager->getSession(req.sessionID);
         Response res;
@@ -131,7 +131,7 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
         res.data = "Session updated";
         sendResponse(conectionFd, res);
     } else if (req.type == REQUEST_TYPE_CLOSE_SESSION) {
-        spdlog::info("Handling close_session request ...{}", req.sessionID);
+        Logger::getLogger()->info("Handling close_session request ...{}", req.sessionID);
         auto _sessionManager = SessionManager::getInstance();
         std::shared_ptr<MediaSession> session = _sessionManager->getSession(req.sessionID);
         Response res;
@@ -151,7 +151,7 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
         res.data = "Session stopped";
         sendResponse(conectionFd, res);
     } else if (req.type == REQUEST_TYPE_GET_DTMF_EVENT) {
-        // spdlog::info("Handling get_dtmf_event request ...{}", req.sessionID);
+        // Logger::getLogger()->info("Handling get_dtmf_event request ...{}", req.sessionID);
         auto _sessionManager = SessionManager::getInstance();
         std::shared_ptr<MediaSession> session = _sessionManager->getSession(req.sessionID);
         Response res;
@@ -172,7 +172,7 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
         sendResponse(conectionFd, res);
         session->clearDTMFEvent();
     } else {
-        spdlog::error("Invalid request type");
+        Logger::getLogger()->error("Invalid request type");
         Response res;
         res.success = false;
         res.type = req.type;
@@ -186,7 +186,7 @@ bool RequestHandler::parseRequest(const char *buffer, int len, Request &req)
 {
     bool success = false;
     json reqJson = json::parse(buffer);
-    // spdlog::info("Request: {}", reqJson.dump());
+    // Logger::getLogger()->info("Request: {}", reqJson.dump());
     if (reqJson.contains(REQUEST_TYPE)) {
         success = true;
         req.type = reqJson[REQUEST_TYPE];
@@ -212,6 +212,6 @@ void RequestHandler::sendResponse(int conectionFd, const Response &res)
     resJson[REQUEST_DATA] = res.data;
     resJson[REQUEST_ERROR] = res.error;
     std::string response = resJson.dump();
-    // spdlog::info("Sending response ...{}", response);
+    // Logger::getLogger()->info("Sending response ...{}", response);
     send(conectionFd, response.c_str(), response.size(), 0);
 }

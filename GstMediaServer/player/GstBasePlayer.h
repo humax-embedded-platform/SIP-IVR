@@ -4,7 +4,7 @@
 #include "GstPlayerContext.h"
 #include <string>
 #include <memory>
-#include "spdlog/spdlog.h"
+#include "util/Log.hpp"
 
 #define MUTEX_LOCK(mutex) spdlog::info("{}:lock", __FUNCTION__); \
 g_mutex_lock(mutex);

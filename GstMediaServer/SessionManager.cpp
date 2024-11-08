@@ -1,5 +1,5 @@
 #include "SessionManager.h"
-#include "spdlog/spdlog.h"
+#include "util/Log.hpp"
 #include "MediaSession.h"
 
 static std::shared_ptr<SessionManager> _instance = nullptr;
@@ -23,13 +23,13 @@ std::shared_ptr<MediaSession> SessionManager::createSession(std::string remoteHo
 {
     if (exceedsMaxSessions())
     {
-        spdlog::error("Max sessions reached");
+        Logger::getLogger()->error("Max sessions reached");
         return nullptr;
     }
 
     if (remotePortInUse(remotePort))
     {
-        spdlog::error("Remote port already in use");
+        Logger::getLogger()->error("Remote port already in use");
         return nullptr;
     }
 

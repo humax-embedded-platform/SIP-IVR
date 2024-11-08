@@ -5,7 +5,7 @@
 #define TAG "GstReceiverPlayer"
 
 void GstReceiverPlayer::onNewSSrc (GstElement* object, guint arg0, guint arg1, gpointer user_data){
-    spdlog::info("onNewSrc arg0:{} arg1:{}", arg0, arg1);
+    Logger::getLogger()->info("onNewSrc arg0:{} arg1:{}", arg0, arg1);
 }
 
 GstCaps *GstReceiverPlayer::onRequestPtMap (GstElement* object, guint arg0, guint payload, gpointer user_data){
@@ -28,15 +28,15 @@ void GstReceiverPlayer::onPadAdded (GstElement* object, GstPad* new_pad, gpointe
     GstPad *sinkpad;
     GstPadLinkReturn lres;
 
-    spdlog::info("new payload on pad: {}", GST_PAD_NAME (new_pad));
+    Logger::getLogger()->info("new payload on pad: {}", GST_PAD_NAME (new_pad));
     GstCaps* caps = gst_pad_get_current_caps(new_pad);
-    spdlog::info("caps: {}", gst_caps_to_string(caps));
+    Logger::getLogger()->info("caps: {}", gst_caps_to_string(caps));
     gchar* caps_str = gst_caps_to_string(caps);
     GstStructure* stru = gst_caps_get_structure(caps, 0);
     gint payload = 0;
     gst_structure_get_int(stru, "payload", &payload);
 
-    spdlog::info("payload: {}", payload);
+    Logger::getLogger()->info("payload: {}", payload);
 
     if (payload == 8 /* PCMA */)  {
         // Do nothing
@@ -58,7 +58,7 @@ GstReceiverPlayer::GstReceiverPlayer() : GstBasePlayer() {
 
 void GstReceiverPlayer::initPipeline()
 {
-    spdlog::info("{}::Initializing pipeline", TAG);
+    Logger::getLogger()->info("{}::Initializing pipeline", TAG);
     _context->_pipeline = gst_parse_launch(_launchCmd.c_str(), nullptr);
 #if 0
     GstElement* udpsink = gst_bin_get_by_name(GST_BIN(_context->_pipeline), "udpsink");
@@ -95,7 +95,7 @@ void GstReceiverPlayer::destroyPipeline()
 
 gpointer GstReceiverPlayer::onPlayerThreadStarted(gpointer data)
 {
-    spdlog::info("GstReceiverPlayer thread started");
+    Logger::getLogger()->info("GstReceiverPlayer thread started");
     return nullptr;
 }
 
@@ -103,14 +103,14 @@ gboolean GstReceiverPlayer::onBusCallback(GstBus *bus, GstMessage *message, gpoi
 {
     GstReceiverPlayer * player = (GstReceiverPlayer *)data;
     GstElement * pipeline = player->_context->_pipeline;
-    spdlog::info("############# Got {} message.. src:{}", GST_MESSAGE_TYPE_NAME (message), gst_element_get_name (message->src));
+    Logger::getLogger()->info("############# Got {} message.. src:{}", GST_MESSAGE_TYPE_NAME (message), gst_element_get_name (message->src));
 
     switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_STATE_CHANGED:
     {
         GstState old_state, new_state, pending_state;
         gst_message_parse_state_changed(message, &old_state, &new_state, &pending_state);
-        spdlog::info("state change to {} from {} with {} pending",
+        Logger::getLogger()->info("state change to {} from {} with {} pending",
                      gst_element_state_get_name(new_state),
                      gst_element_state_get_name(old_state),
                      gst_element_state_get_name(pending_state));
@@ -123,7 +123,7 @@ gboolean GstReceiverPlayer::onBusCallback(GstBus *bus, GstMessage *message, gpoi
         gchar *debug;
 
         gst_message_parse_error (message, &err, &debug);
-        spdlog::error("########  Error: {}", err->message);
+        Logger::getLogger()->error("########  Error: {}", err->message);
         g_error_free (err);
         g_free (debug);
         break;
@@ -141,7 +141,7 @@ gboolean GstReceiverPlayer::onBusCallback(GstBus *bus, GstMessage *message, gpoi
             const char* fieldname = g_quark_to_string (field);
             if(strcmp(fieldname, "number") == 0){
                 gchar *str = (char *)gst_value_serialize (value);
-                spdlog::info("DTMF Event: {}", str);
+                Logger::getLogger()->info("DTMF Event: {}", str);
                 player->setDTMFEvent(str);
             }
             return (gboolean)TRUE;
