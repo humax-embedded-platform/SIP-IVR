@@ -13,7 +13,6 @@ RequestHandler::RequestHandler() {
 
 void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
 {
-    spdlog::info("Handling request ...");
     Request req;
     if (!parseRequest(buffer, len, req))
     {

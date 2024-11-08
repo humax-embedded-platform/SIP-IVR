@@ -32,6 +32,7 @@ private:
     void OnBye(std::shared_ptr<SipMessage> data);
     void OnOk(std::shared_ptr<SipMessage> data);
     void OnAck(std::shared_ptr<SipMessage> data);
+    void OnReferAccepted(std::shared_ptr<SipMessage> data);
 
 
 private:

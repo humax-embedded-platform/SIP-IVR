@@ -44,12 +44,6 @@ void DTMFHandler::onDTMFEvent(std::shared_ptr<MediaSession> session, std::string
 void DTMFHandler::makeRefer(std::string agentID, std::shared_ptr<CallSession> session)
 {
     Logger::getLogger()->info("Making refer to agent: {}", agentID);
-    std::shared_ptr<MediaSession> mediaSession = session->getMediaSession();
-    std::filesystem::path media_dir(getenv("MEDIA_DIR"));
-    std::filesystem::path media_file = media_dir / "redirecting.wav";
-    mediaSession->setPbSourceFile(media_file.string());
-    MediaManager::getInstance()->updateMediaSession(mediaSession);
-
 
     // Make refer to agent
     std::shared_ptr<SipMessage> refer = std::make_shared<SipMessage>();

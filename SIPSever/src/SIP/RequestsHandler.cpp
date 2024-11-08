@@ -186,8 +186,25 @@ void RequestsHandler::OnBusy(std::shared_ptr<SipMessage> data)
 
 void RequestsHandler::OnUnavailable(std::shared_ptr<SipMessage> data)
 {
-    setCallState(data->getCallID(), Session::State::Unavailable);
-    endHandle(data->getFromNumber(), data);
+    std::string callId = data->getCallID();
+    auto session = getSession(callId);
+    if (!session.has_value()) {
+        Logger::getLogger()->error("Session not found for callID: {}", callId);
+        return;
+    }
+
+    std::shared_ptr<SipClient> referedDest = session->get()->getReferedDest();
+
+    if (!referedDest) {
+        setCallState(data->getCallID(), Session::State::Unavailable);
+        endHandle(data->getFromNumber(), data);
+    } else {
+        // agent is not ready yet.-> send UNAVAILABLE to IVR.
+        std::shared_ptr<SipClient> dest =  session->get()->getDest();
+        std::shared_ptr<SipClient> src = session->get()->getSrc();
+        data->setHeader(std::string("SIP/2.0 480 Temporarily Unavailable"));
+        data->setTo("To: <sip:" + src->getNumber() + "@" + _serverIp + ">");
+    }
 }
 
 void RequestsHandler::OnBye(std::shared_ptr<SipMessage> data)
@@ -282,7 +299,7 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
              "Via: SIP/2.0/UDP %s:%d;branch=z9hG4bK1234\r\n"
              "From: <sip:%s@%s>\r\n"
              "To: <sip:%s@%s>\r\n"
-             "Call-ID: %s\r\n"
+             "%s\r\n"
              "CSeq: 1 REFER\r\n"
              "Content-Length: 0\r\n\r\n",
              dest->getIp().c_str(),

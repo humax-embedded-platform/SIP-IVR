@@ -225,7 +225,7 @@ bool MediaClient::sendRequest(Request &req, Response &res)
     // Read response from the server
     int bytesReceived = read(conn->sock, buffer, BUFFER_SIZE);
     if (bytesReceived > 0) {
-        Logger::getLogger()->info("Response from server: {}", buffer);
+        // Logger::getLogger()->info("Response from server: {}", buffer);
         res.parse(buffer);
         succes = true;
     } else if (bytesReceived == 0) {

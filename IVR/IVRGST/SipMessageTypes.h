@@ -15,6 +15,7 @@ public:
 	static constexpr auto BUSY               = "SIP/2.0 486 Busy Here";
 	static constexpr auto UNAVAIALBLE        = "SIP/2.0 480 Temporarily Unavailable";
 	static constexpr auto OK                 = "SIP/2.0 200 OK";
+    static constexpr auto REFER_ACCEPTED     = "SIP/2.0 202 Accepted";
 	static constexpr auto ACK                = "ACK";
 	static constexpr auto BYE                = "BYE";
 	static constexpr auto REFER              = "REFER";

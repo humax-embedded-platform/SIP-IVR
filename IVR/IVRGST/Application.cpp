@@ -28,6 +28,7 @@ Application::Application(std::string server_ip, int server_port, std::string app
     _handlers.emplace(SipMessageTypes::ACK, std::bind(&Application::OnAck, this, std::placeholders::_1));
     _handlers.emplace(SipMessageTypes::BYE, std::bind(&Application::OnBye, this, std::placeholders::_1));
     _handlers.emplace(SipMessageTypes::REQUEST_TERMINATED, std::bind(&Application::onReqTerminated, this, std::placeholders::_1));
+    _handlers.emplace(SipMessageTypes::REFER_ACCEPTED, std::bind(&Application::OnReferAccepted, this, std::placeholders::_1));
 
     _registerThread = std::thread([this]() {
         while (true) {
@@ -208,6 +209,33 @@ void Application::OnAck(std::shared_ptr<SipMessage> data)
         } else {
             Logger::getLogger()->error("MediaSession not found");
         }
+    }
+}
+
+void Application::OnReferAccepted(std::shared_ptr<SipMessage> data)
+{
+    std::string callId = data->getCallID();
+    Logger::getLogger()->info("OnReferAccepted: {}", callId);
+    std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(callId);
+    if (callSession) {
+        callSession->setState(CallSession::State::Connected);
+        std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
+        if (mediaSession) {
+            std::filesystem::path media_dir(getenv("MEDIA_DIR"));
+            std::filesystem::path media_file = media_dir / "redirecting.wav";
+            mediaSession->setPbSourceFile(media_file.string());
+            MediaManager::getInstance()->updateMediaSession(mediaSession);
+
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+
+            media_file = media_dir / "phone_holding_music.wav";
+            mediaSession->setPbSourceFile(media_file.string());
+            MediaManager::getInstance()->updateMediaSession(mediaSession);
+        } else {
+            Logger::getLogger()->error("MediaSession not found");
+        }
+    } else {
+        Logger::getLogger()->error("CallSession not found");
     }
 }
 

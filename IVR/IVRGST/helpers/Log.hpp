@@ -16,13 +16,13 @@ public:
         static std::shared_ptr<spdlog::logger> logger = nullptr;
         if (!logger) {
 #ifdef DEBUG_MODE
-            spdlog::set_pattern("[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %v");
+            spdlog::set_pattern("[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %^%v%$");
             spdlog::set_level(spdlog::level::debug); // Set global log level to debug
             logger = spdlog::stdout_color_mt("console");
 #else
             auto max_size = 1048576 * 5;
             auto max_files = 3;
-            logger = spdlog::rotating_logger_mt("some_logger_name", "logs/rotating.txt", max_size, max_files);
+            logger = spdlog::rotating_logger_mt("some_logger_name", "logs/ivr_application_rotating.txt", max_size, max_files);
 #endif
         }
         return logger;
