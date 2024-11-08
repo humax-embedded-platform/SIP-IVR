@@ -1,5 +1,6 @@
 #include "MediaSession.h"
 #include "MediaClient.h"
+#include "filesystem"
 
 MediaSession::MediaSession(std::string clientIp, int clientRtpPort, std::string mediaDesc) :
     _clientIp(clientIp),
@@ -46,6 +47,12 @@ std::string MediaSession::getPbSourceFile() const
 
 void MediaSession::setPbSourceFile(std::string pbSourceFile)
 {
+    // check if file exists
+    if (!std::filesystem::exists(pbSourceFile))
+    {
+        Logger::getLogger()->error("File does not exist: {}", pbSourceFile);
+        return;
+    }
     _pbSourceFile = pbSourceFile;
 }
 

@@ -72,4 +72,4 @@ while getopts ":dh" option; do
     esac
 done
 
-# run
+run

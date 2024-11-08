@@ -9,6 +9,28 @@
 #include "media/MediaManager.h"
 #include <cstdlib>
 #include <filesystem>
+#include <random>
+#include <sstream>
+
+std::string generateBranch() {
+    // Start with the "magic cookie"
+    std::string branch = "z9hG4bK-";
+
+    // Use a random device and generator
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(0, 15);
+
+    // Generate a 32-character hexadecimal string
+    std::stringstream ss;
+    for (int i = 0; i < 32; ++i) {
+        ss << std::hex << dist(gen);
+    }
+
+    // Append the generated string to the branch cookie
+    branch += ss.str();
+    return branch;
+}
 
 Application::Application(std::string server_ip, int server_port, std::string app_ip, int app_port)
     : _server_ip(server_ip),
@@ -156,7 +178,34 @@ void Application::OnBusy(std::shared_ptr<SipMessage> data)
 
 void Application::OnUnavailable(std::shared_ptr<SipMessage> data)
 {
+    Logger::getLogger()->info("OnBye: {}", data->getCallID());
+    std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getCallID());
+    if (callSession) {
+        std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
+        if (mediaSession) {
+            std::filesystem::path media_dir(getenv("MEDIA_DIR"));
+            std::filesystem::path media_file = media_dir / "agent_busy.wav";
+            mediaSession->setPbSourceFile(media_file.string());
+            MediaManager::getInstance()->updateMediaSession(mediaSession);
 
+            //delay for 7 seconds
+            std::this_thread::sleep_for(std::chrono::seconds(7));
+
+            // Send BYE to server
+            std::shared_ptr<SipMessage> bye = std::make_shared<SipMessage>();
+            bye->setHeader(std::string("BYE sip:") + callSession->getSrc()->getNumber() + "@" + _server.getIp() + ":" + std::to_string(_server.getPort()) + " SIP/2.0");
+            bye->setTo(std::string("<sip:") + callSession->getSrc()->getNumber() + "@" + _server.getIp() + ">;tag=" + callSession->getFromTag());
+            bye->setFrom(std::string("<sip:") + IVR_ACCOUNT_NAME + "@" + _server.getIp() + ">;tag=" + getAppTag() );
+            bye->setVia(std::string("SIP/2.0/UDP ") + _app_ip + ":" + std::to_string(_app_port) + ";branch=" + generateBranch());
+            bye->setCallID(callSession->getCallID());
+            bye->setCSeq("2 BYE");
+            bye->setContact(std::string("<sip:") + IVR_ACCOUNT_NAME + "@" + _server.getIp() + ":" + std::to_string(_server.getPort()) + ">");
+            bye->setContentLength("0");
+            sendToServer(bye);
+        } else {
+            Logger::getLogger()->error("MediaSession not found");
+        }
+    }
 }
 
 void Application::OnBye(std::shared_ptr<SipMessage> data)
@@ -187,8 +236,10 @@ void Application::OnOk(std::shared_ptr<SipMessage> data)
 {
     Logger::getLogger()->info("OnOk: {}", data->getCallID());
     std::string cSqe = data->getCSeq();
-    if (cSqe.find("REGISTER") != std::string::npos) {
+    if (cSqe.find(SipMessageTypes::REGISTER) != std::string::npos) {
         Logger::getLogger()->info("Register successed");
+    } else if (cSqe.find(SipMessageTypes::BYE) != std::string::npos) {
+        OnBye(data);
     } else {
         Logger::getLogger()->warn("Unknown OK message");
     }

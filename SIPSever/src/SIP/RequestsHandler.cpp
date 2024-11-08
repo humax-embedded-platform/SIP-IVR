@@ -203,7 +203,15 @@ void RequestsHandler::OnUnavailable(std::shared_ptr<SipMessage> data)
         std::shared_ptr<SipClient> dest =  session->get()->getDest();
         std::shared_ptr<SipClient> src = session->get()->getSrc();
         data->setHeader(std::string("SIP/2.0 480 Temporarily Unavailable"));
-        data->setTo("To: <sip:" + src->getNumber() + "@" + _serverIp + ">");
+        endHandle(dest->getNumber(), data);
+
+        // send ACK back to referedDest
+        data->setHeader(std::string("ACK sip:") + referedDest->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ";transport=UDP SIP/2.0");
+        data->setCSeq("CSeq: 1 ACK");
+        endHandle(referedDest->getNumber(), data);
+
+        //remove referedDest
+        session->get()->setReferedDest(nullptr);
     }
 }
 
@@ -647,7 +655,7 @@ void RequestsHandler::endCall(const std::string& callID, const std::string& srcN
 bool RequestsHandler::registerClient(std::shared_ptr<SipClient> client)
 {
     if (_clients.find(client->getNumber()) == _clients.end()) {
-        Logger::getLogger()->info("New client: {}", client->getNumber());
+        Logger::getLogger()->warn("New client: {}", client->getNumber());
         _clients.emplace(client->getNumber(), client);
         return true;
     } else {

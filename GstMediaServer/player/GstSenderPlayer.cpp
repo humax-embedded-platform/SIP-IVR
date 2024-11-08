@@ -50,7 +50,7 @@ void need_data_callback(GstElement *appsrc, guint length, gpointer user_data) {
     }
 
 
-    memset(buffer, 0, sizeof(buffer));
+    memset(buffer, 0, length);
     if ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0) {
         // spdlog::info("Read {} bytes from file from offset {} in total {} bytes", bytes_read, fileContext.offset, fileContext.file_size);
         GstBuffer *gst_buffer = gst_buffer_new_allocate(NULL, bytes_read, NULL);
