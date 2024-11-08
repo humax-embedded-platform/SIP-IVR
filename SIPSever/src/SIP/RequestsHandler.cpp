@@ -92,7 +92,9 @@ void RequestsHandler::OnRegister(std::shared_ptr<SipMessage> data)
     if (!isUnregisterReq)
     {
         auto newClient = std::make_shared<SipClient>(data->getFromNumber(), data->getSource());
-        registerClient(std::move(newClient));
+        if (!registerClient(std::move(newClient))) {
+            return;
+        }
     }
 
     auto response = data;
@@ -658,9 +660,6 @@ bool RequestsHandler::registerClient(std::shared_ptr<SipClient> client)
         Logger::getLogger()->warn("New client: {}", client->getNumber());
         _clients.emplace(client->getNumber(), client);
         return true;
-    } else {
-        // replace ex
-        _clients[client->getNumber()] = client;
     }
     return false;
 }
