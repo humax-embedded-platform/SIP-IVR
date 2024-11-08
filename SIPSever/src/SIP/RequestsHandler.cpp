@@ -294,6 +294,13 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
     std::shared_ptr<SipClient> src = session->get()->getSrc();
     std::shared_ptr<SipClient> referedDest = findClient(refer->getReferToNumber());
 
+    if (!referedDest) {
+        // send not available to IVR
+        refer->setHeader(std::string("SIP/2.0 480 Temporarily Unavailable"));
+        endHandle(dest->getNumber(), refer);
+        return;
+    }
+
     Logger::getLogger()->info("Src: {} Dest: {} Refered to: {}", src->getNumber(), dest->getNumber(), referedDest->getNumber());
 
     if (dest->getNumber() != IVR_NAME) {
