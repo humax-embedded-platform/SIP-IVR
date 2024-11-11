@@ -144,7 +144,7 @@ void RequestsHandler::OnInvite(std::shared_ptr<SipMessage> data)
     }
 
     auto called = findClient(data->getToNumber());
-    if (called == nullptr) {
+    if (called == nullptr || data->getToNumber() != "mvnivr") {
         // Send "SIP/2.0 404 Not Found"
         data->setHeader(SipMessageTypes::NOT_FOUND);
         data->setContact("Contact: <sip:" + caller->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ">");
