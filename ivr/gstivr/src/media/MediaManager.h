@@ -1,0 +1,34 @@
+#ifndef MEDIAMANAGER_H
+#define MEDIAMANAGER_H
+
+#include <map>
+#include <memory>
+
+namespace gstivr {
+
+class MediaClient;
+class MediaSession;
+
+class MediaManager
+{
+private:
+    MediaManager();
+
+public:
+    static MediaManager* getInstance();
+
+    std::shared_ptr<MediaSession> createSession(std::string clientIp, int clientRtpPort, std::string mediaDesc);
+    void removeSession(std::shared_ptr<MediaSession> mediaSession);
+
+    bool startMediaSession(std::shared_ptr<MediaSession> mediaSession);
+    bool stopMediaSession(std::shared_ptr<MediaSession> mediaSession);
+    bool updateMediaSession(std::shared_ptr<MediaSession> mediaSession);
+
+private:
+    std::map<std::string, std::shared_ptr<MediaSession>> _sessionMap;
+    std::shared_ptr<MediaClient> _mediaClient;
+};
+
+} // namespace gstivr
+
+#endif // MEDIAMANAGER_H

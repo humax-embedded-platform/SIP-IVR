@@ -23,8 +23,20 @@ Implment a media server using Gstreamer, it's responsible to play some audio fil
   ### * cmake 3.16
 
 ## 2. Run
+
+### 2.1 Build and run scipt
 ```bash
 source launch.sh -d
+```
+
+### 2.2 Build and run by yourself
+
+``` bash
+mkdir -p build
+cd build
+cmake ..
+make
+./sip-ivr -i 192.168.0.3 -m /home/phongdang/WorkSpace/SipServer/blob
 ```
 
 # III. Testing

@@ -1,10 +1,12 @@
 #!/bin/bash -e
 
 build_type="Release"
+media_dir=""
 
 usage() {
     echo "Usage: $0 [-d] [-h]"
     echo "  -d    Run on debug mode"
+    echo "  -m    Media blob directory path"
     echo "  -h    Show help"
     exit 0
 }
@@ -20,19 +22,9 @@ run() {
 
     # Kill previous process
     echo "Kill previous process"
-    if pgrep -x "IVRServer" > /dev/null
+    if pgrep -x "sip-ivr" > /dev/null
     then
-        pkill -9 IVRServer
-    fi
-
-    if pgrep -x "MediaServer" > /dev/null
-    then
-        pkill -9 MediaServer
-    fi
-
-    if pgrep -x "SipServer" > /dev/null
-    then
-        pkill -9 SipServer
+        pkill -9 sip-ivr
     fi
 
     # Get local IP
@@ -44,23 +36,20 @@ run() {
 
     cd bin
     echo "Run SIP Server on $local_ip:5060"
-    gnome-terminal -- bash -c "./SipServer --ip=$local_ip"
 
-    echo "Run IVR Application on $local_ip"
-    ## open terminal with set name for terminal
-    
-    gnome-terminal -- bash -c "./IVRServer -i $local_ip -p 5060 -c $local_ip -m 10000"
-
-    echo "Run Media Server on $local_ip:9999, RTP port: 10000"
-    gnome-terminal -- bash -c "./MediaServer"
+    ./sip-ivr -i $local_ip -m /home/phongdang/WorkSpace/SipServer/blob
 }
 
 # Parse options with getopts
-while getopts ":dh" option; do
+while getopts ":dmh" option; do
     case "${option}" in
         d)
             echo "Run on debug mode"
             build_type="Debug"
+            ;;
+        m)  
+            media_dir=${OPTARG}
+            echo "Media directory: $media_dir"
             ;;
         h)
             usage
