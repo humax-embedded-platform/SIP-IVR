@@ -90,57 +90,61 @@ void GstSenderPlayer::initPipeline()
     }
 
     Logger::getLogger()->info("{}::Initializing pipeline", TAG);
-    _context->_pipeline = gst_pipeline_new("audio-pipeline");
-    GstElement *appsrc = gst_element_factory_make("appsrc", "audio-source");
-    GstElement *audioconvert = gst_element_factory_make("audioconvert", "convert");
-    GstElement *audioresample = gst_element_factory_make("audioresample", "resample");
-    GstElement *opusenc = gst_element_factory_make("opusenc", "encoder");
-    GstElement *rtpopuspay = gst_element_factory_make("rtpopuspay", "rtp-payload");
-    GstElement *udpsink = gst_element_factory_make("udpsink", "udp-sink");
 
-     if (!_context->_pipeline || !appsrc || !audioconvert || !audioresample || !opusenc || !rtpopuspay || !udpsink) {
-         Logger::getLogger()->error("{}::Not all elements could be created.", TAG);
-        return;
+    if (!_launchCmd.empty()) {
+        _context->_pipeline = gst_parse_launch(_launchCmd.c_str(), NULL);
+    } else {
+        _context->_pipeline = gst_pipeline_new("audio-pipeline");
+        GstElement *appsrc = gst_element_factory_make("appsrc", "audio-source");
+        GstElement *audioconvert = gst_element_factory_make("audioconvert", "convert");
+        GstElement *audioresample = gst_element_factory_make("audioresample", "resample");
+        GstElement *opusenc = gst_element_factory_make("opusenc", "encoder");
+        GstElement *rtpopuspay = gst_element_factory_make("rtpopuspay", "rtp-payload");
+        GstElement *udpsink = gst_element_factory_make("udpsink", "udp-sink");
+
+         if (!_context->_pipeline || !appsrc || !audioconvert || !audioresample || !opusenc || !rtpopuspay || !udpsink) {
+             Logger::getLogger()->error("{}::Not all elements could be created.", TAG);
+            return;
+        }
+
+        // Configure appsrc
+        g_object_set(G_OBJECT(appsrc),
+                     "format", GST_FORMAT_TIME,
+                     "is-live", TRUE,
+                     "block", TRUE,
+                     NULL);
+
+        GstCaps *caps = gst_caps_new_simple("audio/x-raw",
+                                            "format", G_TYPE_STRING, "S16LE",
+                                            "rate", G_TYPE_INT, 24000,
+                                            "channels", G_TYPE_INT, 1,
+                                            "channel-mask", GST_TYPE_BITMASK, 0x4,
+                                            "layout", G_TYPE_STRING, "interleaved",
+                                            NULL);
+        g_object_set(appsrc, "caps", caps, NULL);
+        gst_caps_unref(caps);
+
+        // Configure udpsink
+        g_object_set(G_OBJECT(udpsink),
+                     "host", _host.c_str(),
+                     "port", _port,
+                     "async", FALSE,
+                     NULL);
+
+        // set payload type
+        g_object_set(G_OBJECT(rtpopuspay), "pt", 106, NULL);
+
+        // Build the pipeline
+        gst_bin_add_many(GST_BIN(_context->_pipeline), appsrc, audioconvert, audioresample, opusenc, rtpopuspay, udpsink, NULL);
+        if (!gst_element_link_many(appsrc, audioconvert, audioresample, opusenc, rtpopuspay, udpsink, NULL)) {
+            Logger::getLogger()->error("{}::Elements could not be linked.", TAG);
+            gst_object_unref(_context->_pipeline);
+            return;
+        }
+
+        // Set need-data signal handler for appsrc
+        g_signal_connect(appsrc, "need-data", G_CALLBACK(need_data_callback), &_fileContext);
     }
-
-    // Configure appsrc
-    g_object_set(G_OBJECT(appsrc),
-                 "format", GST_FORMAT_TIME,
-                 "is-live", TRUE,
-                 "block", TRUE,
-                 NULL);
-
-    GstCaps *caps = gst_caps_new_simple("audio/x-raw",
-                                        "format", G_TYPE_STRING, "S16LE",
-                                        "rate", G_TYPE_INT, 24000,
-                                        "channels", G_TYPE_INT, 1,
-                                        "channel-mask", GST_TYPE_BITMASK, 0x4,
-                                        "layout", G_TYPE_STRING, "interleaved",
-                                        NULL);
-    g_object_set(appsrc, "caps", caps, NULL);
-    gst_caps_unref(caps);
-
-    // Configure udpsink
-    g_object_set(G_OBJECT(udpsink),
-                 "host", _host.c_str(),
-                 "port", _port,
-                 "async", FALSE,
-                 NULL);
-
-    // set payload type
-    g_object_set(G_OBJECT(rtpopuspay), "pt", 106, NULL);
-
-    // Build the pipeline
-    gst_bin_add_many(GST_BIN(_context->_pipeline), appsrc, audioconvert, audioresample, opusenc, rtpopuspay, udpsink, NULL);
-    if (!gst_element_link_many(appsrc, audioconvert, audioresample, opusenc, rtpopuspay, udpsink, NULL)) {
-        Logger::getLogger()->error("{}::Elements could not be linked.", TAG);
-        gst_object_unref(_context->_pipeline);
-        return;
-    }
-
-    // Set need-data signal handler for appsrc
-    g_signal_connect(appsrc, "need-data", G_CALLBACK(need_data_callback), &_fileContext);
-
 
     // set pipeline to NULL state
     gst_element_set_state(_context->_pipeline, GST_STATE_NULL);
@@ -160,12 +164,23 @@ void GstSenderPlayer::setPBSourceFile(const std::string &sourceFile)
 {
     if (!sourceFile.empty()) {
         Logger::getLogger()->info("Setting source file: {}", sourceFile);
-        if (!_fileContext.file_path.empty() && sourceFile != _fileContext.file_path ) {
-            file_changed = true;
+
+        GstElement *filesrc = gst_bin_get_by_name(GST_BIN(_context->_pipeline), "filesrc");
+        if (filesrc) {
+            // case use filesrc
+            gst_element_set_state(_context->_pipeline, GST_STATE_NULL);
+            g_object_set(G_OBJECT(filesrc), "location", sourceFile.c_str(), nullptr);
+            gst_element_set_state(_context->_pipeline, GST_STATE_PLAYING);
+            gst_object_unref(filesrc);
+        } else {
+            // case use appsrc
+            if (!_fileContext.file_path.empty() && sourceFile != _fileContext.file_path ) {
+                file_changed = true;
+            }
+            _fileContext.file_path = sourceFile;
+            _fileContext.file_size = 0;
+            _fileContext.offset = 0;
         }
-        _fileContext.file_path = sourceFile;
-        _fileContext.file_size = 0;
-        _fileContext.offset = 0;
     }
 }
 

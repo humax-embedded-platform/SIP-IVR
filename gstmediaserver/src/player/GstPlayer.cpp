@@ -152,10 +152,15 @@ void GstPlayer::initPlayer()
         }
 
         if (_codec == "opus") {
+#if 0
             cmd = std::string("filesrc name=source") + _pbSourceFile + " ! wavparse ! audioconvert ! opusenc ! rtpopuspay pt=" +
                   std::to_string(_payloadType) + " ! udpsink host=" + _rtpHost + " port=" + std::to_string(_rtpPort);
+#else
+            // use appsrc in case zoiper softphone
+            cmd = "";
+#endif
         } else if (_codec == "speex") {
-            cmd = std::string("filesrc name=source") + _pbSourceFile + " ! wavparse ! audioconvert ! audioresample ! audio/x-raw,rate=" + std::to_string(_sampleRate) + " ! speexenc ! rtpspeexpay pt=" +
+            cmd = std::string("filesrc name=filesrc") + _pbSourceFile + " ! wavparse ! audioconvert ! audioresample ! audio/x-raw,rate=" + std::to_string(_sampleRate) + " ! speexenc ! rtpspeexpay pt=" +
                   std::to_string(_payloadType) + " ! udpsink host=" + _rtpHost + " port=" + std::to_string(_rtpPort);
         } else {
             Logger::getLogger()->error("Unsupported codec");
