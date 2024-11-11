@@ -94,9 +94,7 @@ void RequestsHandler::OnRegister(std::shared_ptr<SipMessage> data)
     if (!isUnregisterReq)
     {
         auto newClient = std::make_shared<SipClient>(data->getFromNumber(), data->getSource());
-        if (!registerClient(std::move(newClient))) {
-            return;
-        }
+        registerClient(std::move(newClient));
     }
 
     auto response = data;
