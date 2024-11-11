@@ -51,6 +51,7 @@ void GstReceiverPlayer::onPadAdded (GstElement* object, GstPad* new_pad, gpointe
         lres = gst_pad_link(new_pad, sinkpad);
         g_assert(lres == GST_PAD_LINK_OK);
         gst_object_unref(sinkpad);
+        gst_object_unref(rtpdtmfdepay);
     }
 }
 

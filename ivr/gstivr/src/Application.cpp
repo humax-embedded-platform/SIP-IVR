@@ -180,7 +180,7 @@ void Application::OnBusy(std::shared_ptr<SipMessage> data)
 
 void Application::OnUnavailable(std::shared_ptr<SipMessage> data)
 {
-    Logger::getLogger()->info("OnBye: {}", data->getCallID());
+    Logger::getLogger()->info("OnUnavailable: {}", data->getCallID());
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getCallID());
     if (callSession) {
         std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
@@ -204,6 +204,9 @@ void Application::OnUnavailable(std::shared_ptr<SipMessage> data)
             bye->setContact(std::string("<sip:") + IVR_ACCOUNT_NAME + "@" + _server.getIp() + ":" + std::to_string(_server.getPort()) + ">");
             bye->setContentLength("0");
             sendToServer(bye);
+
+            MediaManager::getInstance()->stopMediaSession(mediaSession);
+            MediaManager::getInstance()->removeSession(mediaSession);
         } else {
             Logger::getLogger()->error("MediaSession not found");
         }
