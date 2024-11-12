@@ -18,6 +18,10 @@ void DTMFHandler::onDTMFEvent(std::shared_ptr<gstivr::MediaSession> session, std
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->findSession(session);
     int number = std::stoi(event);
     Logger::getLogger()->info("DTMF number: {}", number);
+    if (callSession->getState() != CallSession::State::Connected) {
+        Logger::getLogger()->warn("Calling state: {} -> ignore", (int)callSession->getState());
+        return;
+    }
     switch (number) {
     case KEY_0:
         replayGuide(callSession);

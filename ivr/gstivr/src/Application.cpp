@@ -178,6 +178,7 @@ void Application::OnBusy(std::shared_ptr<SipMessage> data)
     Logger::getLogger()->info("OnBusy: {}", data->getCallID());
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getCallID());
     if (callSession) {
+        callSession->setState(CallSession::State::Busy);
         std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
         if (mediaSession) {
             std::filesystem::path media_dir(getenv("MEDIA_DIR"));
@@ -212,6 +213,7 @@ void Application::OnUnavailable(std::shared_ptr<SipMessage> data)
 {
     Logger::getLogger()->info("OnUnavailable: {}", data->getCallID());
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getCallID());
+    callSession->setState(CallSession::State::Unavailable);
     if (callSession) {
         std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
         if (mediaSession) {
@@ -304,7 +306,7 @@ void Application::OnReferAccepted(std::shared_ptr<SipMessage> data)
     Logger::getLogger()->info("OnReferAccepted: {}", callId);
     std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(callId);
     if (callSession) {
-        callSession->setState(CallSession::State::Connected);
+        callSession->setState(CallSession::State::Referring);
         std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
         if (mediaSession) {
             std::filesystem::path media_dir(getenv("MEDIA_DIR"));

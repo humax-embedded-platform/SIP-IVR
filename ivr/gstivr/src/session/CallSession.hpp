@@ -21,6 +21,7 @@ public:
 		Cancel,
 		Bye,
 		Connected,
+		Referring
 	};
 
 
