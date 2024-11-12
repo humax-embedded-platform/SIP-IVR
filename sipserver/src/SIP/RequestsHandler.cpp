@@ -159,8 +159,8 @@ void RequestsHandler::OnInvite(std::shared_ptr<SipMessage> data)
         return;
     }
 
-    caller->setMediaDescContent(message->mediaDescContent());
     auto newSession = std::make_shared<Session>(data->getCallID(), caller, message->getRtpPort());
+    newSession->setFromMediaDescContent(message->mediaDescContent());
     _sessions.emplace(data->getCallID(), newSession);
     newSession->setCurOriginTransaction(message->getBranch());
 
@@ -251,7 +251,7 @@ void RequestsHandler::OnBye(std::shared_ptr<SipMessage> data)
             }
             data->setTo(toTag);
 
-            if (!referedDest->mediaDescContent().size()) {
+            if (session.value()->referedToMediaDescContent().empty()) {
                 // Agent is not connected yet. -> send cancel to agent.
                 data->setHeader(std::string("CANCEL sip:") + referedDest->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ";transport=UDP SIP/2.0");
                 data->setCSeq("CSeq: 1 CANCEL");
@@ -347,7 +347,7 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
                 "a=rtpmap:101 telephone-event/8000\r\n" +
                 "a=sendrecv\r\n";
 #else
-    std::string content = src->mediaDescContent();
+    std::string content = session.value()->fromMediaDescContent();
 #endif
 
     std::string transaction = generateBranch();
@@ -412,7 +412,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
 
             if (referedDest) {
                 if (referedDest->getNumber() == sdpMessage->getToNumber()) {
-                    referedDest->setMediaDescContent(sdpMessage->mediaDescContent());
+                    session->get()->setReferedToMediaDescContent(sdpMessage->mediaDescContent());
                     transferedInvite = true;
                 } else if (src->getNumber() == sdpMessage->getToNumber()) {
                     updateMediaInvite = true;
@@ -444,7 +444,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
             }
 
             if (!transferedInvite && !updateMediaInvite) {
-                client->setMediaDescContent(sdpMessage->mediaDescContent());
+                session->get()->setToMediaDescContent(sdpMessage->mediaDescContent());
                 session->get()->setDest(client, sdpMessage->getRtpPort());
                 session->get()->setState(Session::State::Connected);
 
@@ -470,7 +470,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                                 "a=rtpmap:101 telephone-event/8000\r\n" +
                                 "a=sendrecv\r\n";
 #else
-                    std::string content = referedDest->mediaDescContent();
+                    std::string content = session.value()->referedToMediaDescContent();
 #endif
                     std::string invite = std::string() +
                                 "INVITE sip:" + src->getNumber() +"@" + _serverIp + ";transport=UDP SIP/2.0\r\n" +
@@ -553,7 +553,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                 } else {
                     if (data->getContactNumber() == src->getNumber()) {
                         // Send 200 OK to the refered dest.
-                        if (referedDest->mediaDescContent().empty()) {
+                        if (session.value()->referedToMediaDescContent().empty()) {
                             // Receive 200 OK from IVR, forward to the client
                             endHandle(src->getNumber(), data);
                             endCall(data->getCallID(), data->getToNumber(), data->getFromNumber());

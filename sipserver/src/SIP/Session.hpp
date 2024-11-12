@@ -50,6 +50,13 @@ public:
     std::string getReferedToTag() const;
     void setReferedToTag(std::string toTag);
 
+    std::string fromMediaDescContent();
+    void setFromMediaDescContent(std::string mediaDescContent);
+    std::string toMediaDescContent();
+    void setToMediaDescContent(std::string mediaDescContent);
+    std::string referedToMediaDescContent();
+    void setReferedToMediaDescContent(std::string mediaDescContent);
+
 private:
     State _state;
 	std::string _callID;
@@ -66,6 +73,10 @@ private:
     std::string _fromTag;
     std::string _toTag;
     std::string _referedToTag;
+
+    std::string _fromMediaDescContent;
+    std::string _toMediaDescContent;
+    std::string _referedToMediaDescContent;
 };
 
 } // namespace sipserver

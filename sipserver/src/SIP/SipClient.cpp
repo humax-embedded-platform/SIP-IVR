@@ -38,16 +38,6 @@ uint16_t SipClient::getPort() const
     return ntohs(_address.sin_port);
 }
 
-std::string SipClient::mediaDescContent() const
-{
-    return _mediaDescContent;
-}
-
-void SipClient::setMediaDescContent(std::string mediaDescContent)
-{
-    _mediaDescContent = std::move(mediaDescContent);
-}
-
 void SipClient::setAddress(sockaddr_in address)
 {
     _address = std::move(address);

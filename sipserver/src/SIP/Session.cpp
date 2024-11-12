@@ -116,4 +116,34 @@ void Session::setReferedToTag(std::string toTag)
     _referedToTag = toTag;
 }
 
+std::string Session::fromMediaDescContent()
+{
+    return _fromMediaDescContent;
+}
+
+void Session::setFromMediaDescContent(std::string mediaDescContent)
+{
+    _fromMediaDescContent = mediaDescContent;
+}
+
+std::string Session::toMediaDescContent()
+{
+    return _toMediaDescContent;
+}
+
+void Session::setToMediaDescContent(std::string mediaDescContent)
+{
+    _toMediaDescContent = mediaDescContent;
+}
+
+std::string Session::referedToMediaDescContent()
+{
+    return _referedToMediaDescContent;
+}
+
+void Session::setReferedToMediaDescContent(std::string mediaDescContent)
+{
+    _referedToMediaDescContent = mediaDescContent;
+}
+
 } // namespace sipserver
