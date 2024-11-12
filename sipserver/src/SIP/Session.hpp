@@ -21,11 +21,11 @@ public:
 	};
 
 
-    Session(std::string callID, std::shared_ptr<SipClient> src);
+    Session(std::string callID, std::shared_ptr<SipClient> src, uint32_t rtpPort);
 
 	void setState(State state);
-    void setDest(std::shared_ptr<SipClient> dest);
-    void setReferedDest(std::shared_ptr<SipClient> dest);
+    void setDest(std::shared_ptr<SipClient> dest, uint32_t rtpPort);
+    void setReferedDest(std::shared_ptr<SipClient> dest, uint32_t rtpPort);
 
 	std::string getCallID() const;
 	std::shared_ptr<SipClient> getSrc() const;
@@ -39,6 +39,10 @@ public:
     std::string curReferedTransaction() const;
     void setCurReferedTransaction(const std::string& transaction);
 
+    uint32_t getSrcRtpPort() const;
+    uint32_t getDestRtpPort() const;
+    uint32_t getReferedDestRtpPort() const;
+
 private:
     State _state;
 	std::string _callID;
@@ -47,6 +51,10 @@ private:
     std::shared_ptr<SipClient> _referedDest;
     std::string _curOriginTransaction;
     std::string _curReferedTransaction;
+
+    uint32_t _srcRtpPort;
+    uint32_t _destRtpPort;
+    uint32_t _referedDestRtpPort;
 };
 
 } // namespace sipserver

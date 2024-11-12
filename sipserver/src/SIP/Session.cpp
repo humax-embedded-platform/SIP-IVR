@@ -3,8 +3,8 @@
 
 namespace sipserver {
 
-Session::Session(std::string callID, std::shared_ptr<SipClient> src) :
-    _callID(std::move(callID)), _src(src), _state(State::Invited)
+Session::Session(std::string callID, std::shared_ptr<SipClient> src, uint32_t srcRtpPort) :
+    _callID(std::move(callID)), _src(src), _state(State::Invited), _srcRtpPort(srcRtpPort), _destRtpPort(0)
 {
 }
 
@@ -19,14 +19,16 @@ void Session::setState(State state)
 	}
 }
 
-void Session::setDest(std::shared_ptr<SipClient> dest)
+void Session::setDest(std::shared_ptr<SipClient> dest, uint32_t rtpPort)
 {
-	_dest = dest;
+    _dest = dest;
+    _destRtpPort = rtpPort;
 }
 
-void Session::setReferedDest(std::shared_ptr<SipClient> dest)
+void Session::setReferedDest(std::shared_ptr<SipClient> dest, uint32_t rtpPort)
 {
     _referedDest = dest;
+    _referedDestRtpPort = rtpPort;
 }
 
 std::string Session::getCallID() const
@@ -73,4 +75,20 @@ void Session::setCurReferedTransaction(const std::string &transaction)
 {
     _curReferedTransaction = transaction;
 }
+
+uint32_t Session::getSrcRtpPort() const
+{
+    return _srcRtpPort;
+}
+
+uint32_t Session::getDestRtpPort() const
+{
+    return _destRtpPort;
+}
+
+uint32_t Session::getReferedDestRtpPort() const
+{
+    return _referedDestRtpPort;
+}
+
 } // namespace sipserver

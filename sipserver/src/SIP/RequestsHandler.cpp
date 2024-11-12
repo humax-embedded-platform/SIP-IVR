@@ -160,8 +160,7 @@ void RequestsHandler::OnInvite(std::shared_ptr<SipMessage> data)
     }
 
     caller->setMediaDescContent(message->mediaDescContent());
-    caller->setRtpPort(message->getRtpPort());
-    auto newSession = std::make_shared<Session>(data->getCallID(), caller);
+    auto newSession = std::make_shared<Session>(data->getCallID(), caller, message->getRtpPort());
     _sessions.emplace(data->getCallID(), newSession);
     newSession->setCurOriginTransaction(message->getBranch());
 
@@ -213,7 +212,7 @@ void RequestsHandler::OnUnavailable(std::shared_ptr<SipMessage> data)
         endHandle(referedDest->getNumber(), data);
 
         //remove referedDest
-        session->get()->setReferedDest(nullptr);
+        session->get()->setReferedDest(nullptr, -1);
     }
 }
 
@@ -374,7 +373,7 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
     // Send invite to the refer target.
     auto inviteMsg = factory.createMessage(invite, src->getAddress());
     endHandle(referedDest->getNumber(), inviteMsg.value());
-    session.value()->setReferedDest(referedDest);
+    session.value()->setReferedDest(referedDest, -1);
 }
 
 void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
@@ -446,8 +445,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
 
             if (!transferedInvite && !updateMediaInvite) {
                 client->setMediaDescContent(sdpMessage->mediaDescContent());
-                client->setRtpPort(sdpMessage->getRtpPort());
-                session->get()->setDest(client);
+                session->get()->setDest(client, sdpMessage->getRtpPort());
                 session->get()->setState(Session::State::Connected);
 
                 auto response = data;
@@ -457,9 +455,8 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                 // Send re-invite to the refer client to update media info.
                 if (transferedInvite) {
                     Logger::getLogger()->info("Transfered INVITE OK");
-                    referedDest->setRtpPort(sdpMessage->getRtpPort());
-                    session.value()->setReferedDest(referedDest);
-                    uint32_t port = referedDest->getRtpPort();
+                    session.value()->setReferedDest(referedDest, sdpMessage->getRtpPort());
+                    uint32_t port = session->get()->getReferedDestRtpPort();
 #if 0
                     std::string content = std::string("v=0\r\n"
                                 "o=- 179839242 179839248 IN IP4 " + referedDest->getIp() + "\r\n" +
