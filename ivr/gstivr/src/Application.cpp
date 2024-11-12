@@ -175,7 +175,37 @@ void Application::OnRinging(std::shared_ptr<SipMessage> data)
 
 void Application::OnBusy(std::shared_ptr<SipMessage> data)
 {
+    Logger::getLogger()->info("OnBusy: {}", data->getCallID());
+    std::shared_ptr<CallSession> callSession = SessionManager::getInstance()->getSession(data->getCallID());
+    if (callSession) {
+        std::shared_ptr<MediaSession> mediaSession = callSession->getMediaSession();
+        if (mediaSession) {
+            std::filesystem::path media_dir(getenv("MEDIA_DIR"));
+            std::filesystem::path media_file = media_dir / "agent_busy.wav";
+            mediaSession->setPbSourceFile(media_file.string());
+            MediaManager::getInstance()->updateMediaSession(mediaSession);
 
+            //delay for 7 seconds
+            std::this_thread::sleep_for(std::chrono::seconds(7));
+
+            // Send BYE to server
+            std::shared_ptr<SipMessage> bye = std::make_shared<SipMessage>();
+            bye->setHeader(std::string("BYE sip:") + callSession->getSrc()->getNumber() + "@" + _server.getIp() + ":" + std::to_string(_server.getPort()) + " SIP/2.0");
+            bye->setTo(std::string("<sip:") + callSession->getSrc()->getNumber() + "@" + _server.getIp() + ";transport=UDP>;tag=" + callSession->getFromTag());
+            bye->setFrom(std::string("<sip:") + IVR_ACCOUNT_NAME + "@" + _server.getIp() + ">;tag=" + getAppTag() );
+            bye->setVia(std::string("SIP/2.0/UDP ") + _app_ip + ":" + std::to_string(9998) + ";branch=" + generateBranch() + ";rport");
+            bye->setCallID(callSession->getCallID());
+            bye->setCSeq("2 BYE");
+            bye->setContact(std::string("<sip:") + IVR_ACCOUNT_NAME + "@" + _server.getIp() + ":" + std::to_string(_server.getPort()) + ">");
+            bye->setContentLength("0");
+            sendToServer(bye);
+
+            MediaManager::getInstance()->stopMediaSession(mediaSession);
+            MediaManager::getInstance()->removeSession(mediaSession);
+        } else {
+            Logger::getLogger()->error("MediaSession not found");
+        }
+    }
 }
 
 void Application::OnUnavailable(std::shared_ptr<SipMessage> data)
@@ -198,7 +228,7 @@ void Application::OnUnavailable(std::shared_ptr<SipMessage> data)
             bye->setHeader(std::string("BYE sip:") + callSession->getSrc()->getNumber() + "@" + _server.getIp() + ":" + std::to_string(_server.getPort()) + " SIP/2.0");
             bye->setTo(std::string("<sip:") + callSession->getSrc()->getNumber() + "@" + _server.getIp() + ">;tag=" + callSession->getFromTag());
             bye->setFrom(std::string("<sip:") + IVR_ACCOUNT_NAME + "@" + _server.getIp() + ">;tag=" + getAppTag() );
-            bye->setVia(std::string("SIP/2.0/UDP ") + _app_ip + ":" + std::to_string(_app_rtp_port) + ";branch=" + generateBranch());
+            bye->setVia(std::string("SIP/2.0/UDP ") + _app_ip + ":" + std::to_string(9998) + ";branch=" + generateBranch());
             bye->setCallID(callSession->getCallID());
             bye->setCSeq("2 BYE");
             bye->setContact(std::string("<sip:") + IVR_ACCOUNT_NAME + "@" + _server.getIp() + ":" + std::to_string(_server.getPort()) + ">");

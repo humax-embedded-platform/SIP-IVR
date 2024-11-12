@@ -29,6 +29,18 @@ UdpClient::UdpClient(std::string ip, int port, OnNewMessageEvent event) : _ip(st
 	_servaddr.sin_family = AF_INET;
 	_servaddr.sin_addr.s_addr = inet_addr(_ip.c_str());
 	_servaddr.sin_port = htons(port);
+
+    sockaddr_in _local;
+    std::memset(&_local, 0, sizeof(_local));
+    _local.sin_family = AF_INET;
+    _local.sin_addr.s_addr = inet_addr(_ip.c_str());
+    _local.sin_port = htons(9998);
+
+    if (bind(_sockfd, reinterpret_cast<const struct sockaddr*>(&_local), sizeof(_local)) < 0)
+    {
+        std::cerr << "bind failed" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 UdpClient::~UdpClient()

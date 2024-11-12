@@ -144,7 +144,11 @@ void RequestsHandler::OnInvite(std::shared_ptr<SipMessage> data)
     }
 
     auto called = findClient(data->getToNumber());
+#ifdef DEBUG_MODE
+    if (called == nullptr) {
+#else
     if (called == nullptr || data->getToNumber() != "mvnivr") {
+#endif
         // Send "SIP/2.0 404 Not Found"
         data->setHeader(SipMessageTypes::NOT_FOUND);
         data->setContact("Contact: <sip:" + caller->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ">");
@@ -181,8 +185,33 @@ void RequestsHandler::OnRinging(std::shared_ptr<SipMessage> data)
 
 void RequestsHandler::OnBusy(std::shared_ptr<SipMessage> data)
 {
-    setCallState(data->getCallID(), Session::State::Busy);
-    endHandle(data->getFromNumber(), data);
+    std::string callId = data->getCallID();
+    auto session = getSession(callId);
+    if (!session.has_value()) {
+        Logger::getLogger()->error("Session not found for callID: {}", callId);
+        return;
+    }
+
+    std::shared_ptr<SipClient> referedDest = session->get()->getReferedDest();
+
+    if (!referedDest) {
+        setCallState(data->getCallID(), Session::State::Busy);
+        endHandle(data->getFromNumber(), data);
+    } else {
+        // agent is not ready yet.-> send UNAVAILABLE to IVR.
+        std::shared_ptr<SipClient> dest =  session->get()->getDest();
+        std::shared_ptr<SipClient> src = session->get()->getSrc();
+        // data->setHeader(std::string("SIP/2.0 480 Temporarily Unavailable"));
+        endHandle(dest->getNumber(), data);
+
+        // send ACK back to referedDest
+        data->setHeader(std::string("ACK sip:") + referedDest->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ";transport=UDP SIP/2.0");
+        data->setCSeq("CSeq: 1 ACK");
+        endHandle(referedDest->getNumber(), data);
+
+        //remove referedDest
+        session->get()->setReferedDest(nullptr, -1);
+    }
 }
 
 void RequestsHandler::OnUnavailable(std::shared_ptr<SipMessage> data)
