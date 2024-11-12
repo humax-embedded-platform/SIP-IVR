@@ -663,10 +663,13 @@ void RequestsHandler::endCall(const std::string& callID, const std::string& srcN
 
 bool RequestsHandler::registerClient(std::shared_ptr<SipClient> client)
 {
-    if (_clients.find(client->getNumber()) == _clients.end()) {
+    auto it = _clients.find(client->getNumber());
+    if (it == _clients.end()) {
         Logger::getLogger()->warn("New client: {}", client->getNumber());
         _clients.emplace(client->getNumber(), client);
         return true;
+    } else {
+        it->second->setAddress(client->getAddress());
     }
     return false;
 }

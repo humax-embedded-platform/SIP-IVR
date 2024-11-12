@@ -67,4 +67,9 @@ void SipClient::setMediaDescContent(std::string mediaDescContent)
 {
     _mediaDescContent = std::move(mediaDescContent);
 }
+
+void SipClient::setAddress(sockaddr_in address)
+{
+    _address = std::move(address);
+}
 } // namespace sipserver

@@ -4,7 +4,7 @@ build_type="Release"
 media_dir=""
 
 usage() {
-    echo "Usage: $0 [-d] [-h]"
+    echo "Usage: $0 [-d] [-m] [-h]"
     echo "  -d    Run on debug mode"
     echo "  -m    Media blob directory path"
     echo "  -h    Show help"
@@ -31,17 +31,15 @@ run() {
     local_ip=$(hostname -I | awk '{print $1}')
     echo "Local IP: $local_ip"
 
-    # Set media directory to environment variable
-    export MEDIA_DIR=$(pwd)/blob
-
     cd bin
     echo "Run SIP Server on $local_ip:5060"
 
-    ./sip-ivr -i $local_ip -m /home/phongdang/WorkSpace/SipServer/blob
+    ./sip-ivr -i $local_ip -m $media_dir
 }
 
 # Parse options with getopts
-while getopts ":dmh" option; do
+while getopts ":m:dh" option; do
+    printf "Option: %s\n" $option
     case "${option}" in
         d)
             echo "Run on debug mode"

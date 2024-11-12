@@ -15,6 +15,7 @@ public:
 
 	std::string getNumber() const;
 	sockaddr_in getAddress() const;
+    void setAddress(sockaddr_in address);
     std::string getIp() const;
     uint16_t getPort() const;
     uint16_t getRtpPort() const;
