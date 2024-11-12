@@ -246,8 +246,8 @@ void RequestsHandler::OnBye(std::shared_ptr<SipMessage> data)
 
             data->setHeader(std::string("BYE sip:") + referedDest->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ";transport=UDP SIP/2.0");
             std::string toTag = "To: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">";
-            if (referedDest->getTag().size() > 0) {
-                toTag += ";tag=" + referedDest->getTag();
+            if (session.value()->getReferedToTag().size() > 0) {
+                toTag += ";tag=" + session.value()->getReferedToTag();
             }
             data->setTo(toTag);
 
@@ -259,7 +259,7 @@ void RequestsHandler::OnBye(std::shared_ptr<SipMessage> data)
             }
             endHandle(referedDest->getNumber(), data);
         } else if (data->getFromNumber() == referedDest->getNumber()) {
-            data->setFrom("From: <sip:" + dest->getNumber() + "@" + _serverIp +">;tag=" + dest->getTag());
+            data->setFrom("From: <sip:" + dest->getNumber() + "@" + _serverIp +">;tag=" + session.value()->getToTag());
             std::string via = data->getVia();
             // replace
             std::string partern = referedDest->getIp() + ":" + std::to_string(referedDest->getPort());
@@ -358,7 +358,7 @@ void RequestsHandler::OnRefer(std::shared_ptr<SipMessage> refer)
                 "Max-Forwards: 70\r\n" +
                 "Contact: <sip:" + src->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ">\r\n" +
                 "To: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">\r\n" +
-                "From: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + src->getTag() + "\r\n" +
+                "From: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getFromTag() + "\r\n" +
                 callId + "\r\n" +
                 "CSeq: 1 INVITE\r\n" +
                 "Allow: INVITE, ACK, CANCEL, BYE, NOTIFY, REFER, MESSAGE, OPTIONS, INFO, SUBSCRIBE\r\n" +
@@ -425,11 +425,11 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
             if (_to.find("tag=") != std::string::npos) {
                 std::string toTag = _to.substr(_to.find("tag=") + 4);
                 if (transferedInvite) {
-                    referedDest->setTag(toTag);
+                    session->get()->setReferedToTag(toTag);
                 } else if (updateMediaInvite) {
                     // in case updateMediaInvite, do nothing.
                 } else {
-                    client->setTag(toTag);
+                    session->get()->setToTag(toTag);
                 }
             }
 
@@ -439,7 +439,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                     // in case updateMediaInvite, do nothing
                 } else {
                     std::string fromTag = _from.substr(_from.find("tag=") + 4);
-                    src->setTag(fromTag);
+                    session->get()->setFromTag(fromTag);
                 }
             }
 
@@ -477,8 +477,8 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                                 "Via: SIP/2.0/UDP " + dest->getIp() + ":" + std::to_string(dest->getPort()) + ";branch=" + generateBranch() + ";rport\r\n" +
                                 "Max-Forwards: 70\r\n"  +
                                 "Contact: <sip:" + dest->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ">\r\n" +
-                                "To: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + src->getTag() + "\r\n" +
-                                "From: <sip:" + dest->getNumber() + "@" + _serverIp + ">;tag=" + dest->getTag() +"\r\n" +
+                                "To: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getFromTag() + "\r\n" +
+                                "From: <sip:" + dest->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getToTag() +"\r\n" +
                                 session.value()->getCallID() + "\r\n" +
                                 "CSeq: 2 INVITE\r\n" +
                                 "Allow: INVITE, ACK, CANCEL, BYE, NOTIFY, REFER, MESSAGE, OPTIONS, INFO, SUBSCRIBE\r\n" +
@@ -497,8 +497,8 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                     Logger::getLogger()->info("Update media INVITE OK. -> Send ACK to {}", referedDest->getNumber());
                     std::string ackAgent = std::string() +
                                            "ACK sip:" + referedDest->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ";transport=UDP SIP/2.0\r\n" +
-                                           "To: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">;tag=" + referedDest->getTag() + "\r\n" +
-                                           "From: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + src->getTag() + "\r\n" +
+                                           "To: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getReferedToTag() + "\r\n" +
+                                           "From: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getFromTag() + "\r\n" +
                                            "Via: SIP/2.0/UDP " + src->getIp() + ":" + std::to_string(src->getPort()) + ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n" +
                                            session.value()->getCallID() + "\r\n" +
                                            "CSeq: 1 ACK\r\n" +
@@ -514,8 +514,8 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                     // Send ACK to client
                     std::string ackClient = std::string() +
                                             "ACK sip:" + src->getNumber() + "@" + _serverIp + ":" + std::to_string(_serverPort) + ";transport=UDP SIP/2.0\r\n" +
-                                            "To: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + src->getTag() + "\r\n" +
-                                            "From: <sip:" + dest->getNumber() + "@" + _serverIp + ">;tag=" + dest->getTag() + "\r\n" +
+                                            "To: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getFromTag() + "\r\n" +
+                                            "From: <sip:" + dest->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getToTag() + "\r\n" +
                                             "Via: SIP/2.0/UDP " + dest->getIp() + ":" + std::to_string(dest->getPort()) + ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n" +
                                             session.value()->getCallID() + "\r\n" +
                                             "CSeq: 2 ACK\r\n" +
@@ -533,7 +533,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                                 "Via: SIP/2.0/UDP " + src->getIp() + ":" + std::to_string(src->getPort()) + ";branch=z9hG4bK-524287-1---c4ee7dee1e5d938d;rport\r\n" +
                                 "Max-Forwards: 70\r\n" +
                                 "To: <sip:" + dest->getNumber() + "@" + _serverIp + ">\r\n" +
-                                "From: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + src->getTag() + "\r\n" +
+                                "From: <sip:" + src->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getFromTag() + "\r\n" +
                                 session.value()->getCallID() + "\r\n" +
                                 "CSeq: 2 BYE\r\n" +
                                 "Content-Length: 0\r\n" +
@@ -559,7 +559,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                             endCall(data->getCallID(), data->getToNumber(), data->getFromNumber());
                         } else {
                             // Response 200 OK to the refered agent.
-                            data->setFrom("From: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">;tag=" + referedDest->getTag());
+                            data->setFrom("From: <sip:" + referedDest->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getReferedToTag());
                             //update via
                             std::string via = data->getVia();
                             std::string partern = dest->getIp() + ":" + std::to_string(dest->getPort());
@@ -572,7 +572,7 @@ void RequestsHandler::OnOk(std::shared_ptr<SipMessage> data)
                         }
                     } else if (data->getContactNumber() == referedDest->getNumber()) {
                         // Send 200 OK to the src.
-                        data->setFrom("From: <sip:" + dest->getNumber() + "@" + _serverIp + ">;tag=" + dest->getTag());
+                        data->setFrom("From: <sip:" + dest->getNumber() + "@" + _serverIp + ">;tag=" + session.value()->getToTag());
                         endHandle(src->getNumber(), data);
                         endCall(data->getCallID(), data->getFromNumber(), data->getToNumber());
                     }

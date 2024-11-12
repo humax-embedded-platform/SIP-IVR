@@ -38,26 +38,6 @@ uint16_t SipClient::getPort() const
     return ntohs(_address.sin_port);
 }
 
-uint16_t SipClient::getRtpPort() const
-{
-    return _rtpPort;
-}
-
-void SipClient::setRtpPort(uint16_t rtpPort)
-{
-    _rtpPort = rtpPort;
-}
-
-std::string SipClient::getTag() const
-{
-    return _tag;
-}
-
-void SipClient::setTag(std::string tag)
-{
-    _tag = std::move(tag);
-}
-
 std::string SipClient::mediaDescContent() const
 {
     return _mediaDescContent;

@@ -91,4 +91,29 @@ uint32_t Session::getReferedDestRtpPort() const
     return _referedDestRtpPort;
 }
 
+std::string Session::getFromTag() const
+{
+    return _fromTag;
+}
+void Session::setFromTag(std::string fromTag)
+{
+    _fromTag = fromTag;
+}
+std::string Session::getToTag() const
+{
+    return _toTag;
+}
+void Session::setToTag(std::string toTag)
+{
+    _toTag = toTag;
+}
+std::string Session::getReferedToTag() const
+{
+    return _referedToTag;
+}
+void Session::setReferedToTag(std::string toTag)
+{
+    _referedToTag = toTag;
+}
+
 } // namespace sipserver
