@@ -18,6 +18,7 @@ include_directories(./include)
 include_directories(./src)
 include_directories(./src/player)
 include_directories(./src/util)
+include_directories(${PRO_DIR}/include)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GLIB REQUIRED glib-2.0)

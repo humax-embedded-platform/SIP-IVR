@@ -3,12 +3,16 @@
 #include "gstivr.h"
 #include "gstmediaserver.h"
 #include "cxxopts.hpp"
-#include "Log.hpp"
+#include "BaseLogger.hpp"
 
 #define SEVER_PORT_DEFAULT 5060
 #define MEDIA_SERVER_PORT_DEFAULT 10000
 
 int main(int argc, char *argv[]) {
+
+    BaseLogger::initLogger();
+
+    BaseLogger logger("main");
 
     cxxopts::Options options("IVR System", "Open source application for an automated telephone system");
 
@@ -26,7 +30,7 @@ int main(int argc, char *argv[]) {
 
     if (result.count("help"))
     {
-        Logger::getLogger()->info(options.help());
+        logger.getLogger()->info(options.help());
         exit(0);
     }
 
@@ -56,7 +60,7 @@ int main(int argc, char *argv[]) {
     }
     catch (const cxxopts::OptionException&)
     {
-        Logger::getLogger()->info("Input parameters are not correct. Please check the help message.");
+        logger.getLogger()->info("Input parameters are not correct. Please check the help message.");
     }
 
     return 0;

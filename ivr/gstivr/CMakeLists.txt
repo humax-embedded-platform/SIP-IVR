@@ -35,6 +35,7 @@ include_directories(./src/model)
 include_directories(./src/media)
 include_directories(./src/helpers)
 include_directories(./src/include)
+include_directories(${PRO_DIR}/include)
 
 add_library(${LIB} SHARED
   # main.cpp

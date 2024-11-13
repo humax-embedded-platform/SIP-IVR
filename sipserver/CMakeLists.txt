@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 
+include_directories(${PRO_DIR}/include)
 
 set(SRC_DIR "${PROJECT_SOURCE_DIR}/src")
 

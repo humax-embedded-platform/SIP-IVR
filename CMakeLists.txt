@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project(sip-ivr LANGUAGES CXX)
 
 set(APP "sip-ivr")
+set(PRO_DIR ${CMAKE_SOURCE_DIR})
 set(BIN_DIR ${CMAKE_SOURCE_DIR}/bin)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -27,9 +28,11 @@ add_subdirectory(sipserver)
 add_subdirectory(gstmediaserver)
 
 include_directories(./include)
+include_directories(./common)
 
 add_executable(${APP}
     src/main.cpp
+    include/BaseLogger.hpp
 )
 
 target_link_libraries(${APP} sipserver gstmediaserver gstivr spdlog dl)
