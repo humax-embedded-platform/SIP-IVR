@@ -113,13 +113,14 @@ void RequestsHandler::OnRegister(std::shared_ptr<SipMessage> data)
 
 void RequestsHandler::OnCancel(std::shared_ptr<SipMessage> data)
 {
+    Logger::getLogger()->info("OnCancel: {}", data->toString());
     setCallState(data->getCallID(), Session::State::Cancel);
     endHandle(data->getToNumber(), data);
 }
 
 void RequestsHandler::onReqTerminated(std::shared_ptr<SipMessage> data)
 {
-    Logger::getLogger()->info("Request Terminated");
+    Logger::getLogger()->info("Request Terminated: {}", data->toString());
     std::string callId = data->getCallID();
     auto session = getSession(callId);
     if (!session.has_value()) {
@@ -175,16 +176,19 @@ void RequestsHandler::OnInvite(std::shared_ptr<SipMessage> data)
 
 void RequestsHandler::OnTrying(std::shared_ptr<SipMessage> data)
 {
+    Logger::getLogger()->info("OnTrying: {}", data->toString());
     endHandle(data->getFromNumber(), data);
 }
 
 void RequestsHandler::OnRinging(std::shared_ptr<SipMessage> data)
 {
+    Logger::getLogger()->info("OnRinging: {}", data->toString());
     endHandle(data->getFromNumber(), data);
 }
 
 void RequestsHandler::OnBusy(std::shared_ptr<SipMessage> data)
 {
+    Logger::getLogger()->info("OnBusy: {}", data->toString());
     std::string callId = data->getCallID();
     auto session = getSession(callId);
     if (!session.has_value()) {
@@ -216,6 +220,7 @@ void RequestsHandler::OnBusy(std::shared_ptr<SipMessage> data)
 
 void RequestsHandler::OnUnavailable(std::shared_ptr<SipMessage> data)
 {
+    Logger::getLogger()->info("OnUnavailable: {}", data->toString());
     std::string callId = data->getCallID();
     auto session = getSession(callId);
     if (!session.has_value()) {
@@ -691,7 +696,7 @@ bool RequestsHandler::registerClient(std::shared_ptr<SipClient> client)
 {
     auto it = _clients.find(client->getNumber());
     if (it == _clients.end()) {
-        Logger::getLogger()->warn("New client: {}", client->getNumber());
+        Logger::getLogger()->warn("New client: {}@{}:{}", client->getNumber(), client->getIp(), client->getPort());
         _clients.emplace(client->getNumber(), client);
         return true;
     } else {
@@ -702,7 +707,7 @@ bool RequestsHandler::registerClient(std::shared_ptr<SipClient> client)
 
 void RequestsHandler::unregisterClient(std::shared_ptr<SipClient> client)
 {
-    Logger::getLogger()->info("unregister client: {}", client->getNumber());
+    Logger::getLogger()->info("unregister client: {}@{}:{}", client->getNumber(), client->getIp(), client->getPort());
     _clients.erase(client->getNumber());
 }
 

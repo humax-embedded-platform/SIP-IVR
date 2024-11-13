@@ -23,6 +23,7 @@ SipServer::SipServer(std::string ip, int port) :
 
 void SipServer::onNewMessage(std::string data, sockaddr_in src)
 {
+    Logger::getLogger()->info("New message from {}:{}" , inet_ntoa(src.sin_addr), ntohs(src.sin_port));
 	auto message = _messagesFactory.createMessage(std::move(data), std::move(src));
 	if (message.has_value())
 	{

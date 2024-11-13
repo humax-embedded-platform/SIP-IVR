@@ -60,9 +60,6 @@ void UdpServer::startReceive()
 #elif defined _WIN32 || defined _WIN64
 				recvfrom(_sockfd, buffer, BUFFER_SIZE, 0, reinterpret_cast<struct sockaddr*>(&senderEndPoint), &len);
 #endif
-				if (len) {
-                    Logger::getLogger()->info("Received from {}:{} with message: {}" , inet_ntoa(senderEndPoint.sin_addr), ntohs(senderEndPoint.sin_port), buffer);
-				}
 				if (!_keepRunning) return;
 				_onNewMessageEvent(std::move(buffer), senderEndPoint);
 			}
