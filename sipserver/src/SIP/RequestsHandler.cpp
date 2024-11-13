@@ -88,7 +88,7 @@ std::optional<std::shared_ptr<Session>> RequestsHandler::getSession(const std::s
 
 void RequestsHandler::OnRegister(std::shared_ptr<SipMessage> data)
 {
-
+    Logger::getLogger()->info("OnRegister: {}", data->toString());
     bool isUnregisterReq = data->getContact().find("expires=0") != -1;
 
     if (!isUnregisterReq)
