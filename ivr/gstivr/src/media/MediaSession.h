@@ -28,6 +28,9 @@ public:
     std::string remoteHost();
     int remotePort();
 
+    int mediaServerPort() const;
+    void setMediaServerPort(int mediaServerPort);
+
     std::string getSessionID() const;
     void setSessionID(std::string sessionID);
 
@@ -44,6 +47,7 @@ public:
 private:
     std::string _clientIp;
     int _clientRtpPort;
+    int _mediaServerPort;
     std::string _sessionID;
     std::string _pbSourceFile;
     std::string _mediaDes;

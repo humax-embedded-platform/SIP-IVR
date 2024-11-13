@@ -34,13 +34,12 @@ std::string generateBranch() {
 
 namespace gstivr {
 
-Application::Application(std::string server_ip, int server_port, std::string app_ip, int app_rtp_port)
+Application::Application(std::string server_ip, int server_port, std::string app_ip)
     : _server_ip(server_ip),
     _server_port(server_port),
     _app_ip(app_ip),
-    _app_rtp_port(app_rtp_port),
     _server(server_ip, server_port, std::bind(&Application::onNewMessage, this, std::placeholders::_1, std::placeholders::_2)) {
-    Logger::getLogger()->info("Application created: {}:{}, {}:{}", server_ip, server_port, app_ip, app_rtp_port );
+    Logger::getLogger()->info("Application created: {}:{}, {}", server_ip, server_port, app_ip);
     _server.startReceive();
     _handlers.emplace(SipMessageTypes::CANCEL, std::bind(&Application::OnCancel, this, std::placeholders::_1));
     _handlers.emplace(SipMessageTypes::INVITE, std::bind(&Application::OnInvite, this, std::placeholders::_1));
@@ -88,11 +87,6 @@ int Application::serverPort() const
 std::string Application::getAppIP() const
 {
     return _app_ip;
-}
-
-int Application::getAppRtpPort() const
-{
-    return _app_rtp_port;
 }
 
 void Application::onNewMessage(std::string data, sockaddr_in src)
@@ -159,7 +153,7 @@ void Application::OnInvite(std::shared_ptr<SipMessage> data)
     response->setContact(std::string("<sip:") + IVR_ACCOUNT_NAME + "@" + _server.getIp() + ":" + std::to_string(_server.getPort()) + ">");
 
     response->setRtpHost(_app_ip);
-    response->setRtpPort(_app_rtp_port);
+    response->setRtpPort(callSession->getMediaSession()->mediaServerPort());
     sendToServer(response);
 }
 

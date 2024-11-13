@@ -9,7 +9,7 @@ namespace gstmediaserver {
 class GstReceiverPlayer : public GstBasePlayer
 {
 public:
-    GstReceiverPlayer();
+    GstReceiverPlayer(int port);
 
     void initPipeline() override;
     void destroyPipeline() override;
@@ -27,6 +27,7 @@ private:
 
 private:
     std::string _dtmfEvent;
+    int _port;
 };
 
 } // namespace gstmediaserver

@@ -4,6 +4,5 @@
 
 #define DEFAULT_HOST "127.0.0.1"
 #define DEFAULT_PORT 9999
-#define MEDIA_DEFAULT_PORT 10000
 
 #endif // DEFINES_H

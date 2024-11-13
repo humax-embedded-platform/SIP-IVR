@@ -14,6 +14,7 @@ MediaSession::MediaSession(std::string remoteHost, int remotePort, int localPort
     _player = std::make_shared<GstPlayer>();
     _player->setRtpHost(_remoteHost);
     _player->setRtpPort(_remotePort);
+    _player->setLocalRtpPort(_localPort);
     Logger::getLogger()->info("Created session with ID {}", _sessionID);
 }
 

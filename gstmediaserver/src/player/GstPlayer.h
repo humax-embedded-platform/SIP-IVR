@@ -19,6 +19,7 @@ public:
 
     void setRtpPort(int port);
     void setRtpHost(std::string host);
+    void setLocalRtpPort(int port);
     void setCodec(std::string codec);
     void setPayloadType(int payloadType);
     void setSampleRate(int sampleRate);
@@ -39,6 +40,7 @@ private:
 private:
     int _rtpPort;
     std::string _rtpHost;
+    int _localRtpPort;
     std::string _codec;
     int _payloadType;
     int _sampleRate;

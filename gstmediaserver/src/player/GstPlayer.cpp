@@ -37,6 +37,11 @@ void GstPlayer::setRtpHost(std::string host)
     _rtpHost = host;
 }
 
+void GstPlayer::setLocalRtpPort(int port)
+{
+    _localRtpPort = port;
+}
+
 void GstPlayer::setCodec(std::string codec)
 {
     Logger::getLogger()->info("Setting codec: {}", codec);
@@ -173,7 +178,7 @@ void GstPlayer::initPlayer()
     }
 
     if (!_receiverPlayer) {
-        _receiverPlayer = std::make_shared<GstReceiverPlayer>();
+        _receiverPlayer = std::make_shared<GstReceiverPlayer>(_localRtpPort);
         std::string cmd = "rtpbin name=rtpbin  udpsrc name=udpsrc caps=application/x-rtp !  rtpbin.recv_rtp_sink_0 rtpbin.  rtpdtmfdepay name=rtpdtmfdepay ! fakesink name=fakesink";
         Logger::getLogger()->info("GstReceiverPlayer command: {}", cmd);
         _receiverPlayer->setLaunchCmd(cmd);

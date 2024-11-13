@@ -6,7 +6,6 @@
 #include "BaseLogger.hpp"
 
 #define SEVER_PORT_DEFAULT 5060
-#define MEDIA_SERVER_PORT_DEFAULT 10000
 
 int main(int argc, char *argv[]) {
 
@@ -23,7 +22,6 @@ int main(int argc, char *argv[]) {
 #if 0
         ("c,app-ip", "IVR application ip", cxxopts::value<std::string>())
 #endif
-        ("r,app-rtp-port", std::string("IVR application rtp port (default: ") + std::to_string(MEDIA_SERVER_PORT_DEFAULT) + ").", cxxopts::value<int>()->default_value(std::to_string(MEDIA_SERVER_PORT_DEFAULT)))
         ("m,media-blob", "Media blob directory path", cxxopts::value<std::string>());
 
     auto result = options.parse(argc, argv);
@@ -41,7 +39,6 @@ int main(int argc, char *argv[]) {
 #if 0
         std::string app_ip = result["app-ip"].as<std::string>();
 #endif
-        int app_rtp_port = result["app-rtp-port"].as<int>();
         std::string media_blob = result["media-blob"].as<std::string>();
 
         // set media_blob to env
@@ -54,7 +51,7 @@ int main(int argc, char *argv[]) {
         gstmediaserver::start();
 
         // start ivr application
-        gstivr::start(server_ip, server_port, server_ip, app_rtp_port);
+        gstivr::start(server_ip, server_port, server_ip);
 
         getchar();
     }

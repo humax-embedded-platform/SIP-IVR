@@ -11,13 +11,12 @@ namespace gstivr {
 class Application
 {
 public:
-    Application(std::string server_ip, int server_port, std::string app_ip, int app_rtp_port);
+    Application(std::string server_ip, int server_port, std::string app_ip);
 
 public:
     std::string serverHost() const;
     int serverPort() const;
     std::string getAppIP() const;
-    int getAppRtpPort() const;
 
     std::string getAppTag();
     void sendToServer(std::shared_ptr<SipMessage> message);
@@ -42,7 +41,6 @@ private:
     std::string _server_ip;
     int _server_port;
     std::string _app_ip;
-    int _app_rtp_port;
     SipMessageFactory _messagesFactory;
     std::thread _registerThread;
     std::shared_ptr<DTMFHandler> _dtmfHandler;

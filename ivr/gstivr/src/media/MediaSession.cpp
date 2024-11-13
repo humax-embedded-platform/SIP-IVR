@@ -33,6 +33,16 @@ int MediaSession::remotePort()
     return _clientRtpPort;
 }
 
+int MediaSession::mediaServerPort() const
+{
+    return _mediaServerPort;
+}
+
+void MediaSession::setMediaServerPort(int mediaServerPort)
+{
+    _mediaServerPort = mediaServerPort;
+}
+
 std::string MediaSession::getSessionID() const
 {
     return _sessionID;

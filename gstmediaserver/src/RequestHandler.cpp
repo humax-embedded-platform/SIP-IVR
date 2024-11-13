@@ -51,10 +51,14 @@ void RequestHandler::handleRequest(int conectionFd, const char *buffer, int len)
             }
             session->open();
 
+            json session_data;
+            session_data[KEY_SESSION_ID] = session->sessionID();
+            session_data[KEY_RTP_PORT] = session->localPort();
+
             res.success = true;
             res.type = req.type;
             res.sessionID = session->sessionID();
-            res.data = session->sessionID();
+            res.data = session_data.dump();
         }
         Logger::getLogger()->info("init_session response: {}", res.sessionID);
         sendResponse(conectionFd, res);

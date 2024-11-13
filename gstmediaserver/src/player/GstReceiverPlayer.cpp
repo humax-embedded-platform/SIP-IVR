@@ -55,8 +55,8 @@ void GstReceiverPlayer::onPadAdded (GstElement* object, GstPad* new_pad, gpointe
     }
 }
 
-GstReceiverPlayer::GstReceiverPlayer() : GstBasePlayer() {
-
+GstReceiverPlayer::GstReceiverPlayer(int port) : GstBasePlayer(), _port(port) {
+    Logger::getLogger()->info("{}::ctor, port: {}", TAG), port;
 }
 
 void GstReceiverPlayer::initPipeline()
@@ -72,7 +72,7 @@ void GstReceiverPlayer::initPipeline()
 
     GstElement* udpsrc = gst_bin_get_by_name(GST_BIN(_context->_pipeline), "udpsrc");
     if (udpsrc) {
-        g_object_set (udpsrc, "port", MEDIA_DEFAULT_PORT, NULL);
+        g_object_set (udpsrc, "port", _port, NULL);
 #if 0
         g_object_set (udpsrc, "socket", udp_sink_socket, NULL);
 #endif

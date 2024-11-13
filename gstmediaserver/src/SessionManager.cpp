@@ -48,7 +48,7 @@ std::shared_ptr<MediaSession> SessionManager::createSession(std::string remoteHo
 
 int SessionManager::getAvailablePort()
 {
-    for (int port = START_PORT; port < 65536; port++)
+    for (int port = START_PORT; port < 65536; port ++)
     {
         if (_sessions.find(port) == _sessions.end())
         {

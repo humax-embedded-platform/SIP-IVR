@@ -22,6 +22,9 @@
 #define REQUEST_TYPE_UPDATE_SESSION "update_session"
 #define REQUEST_TYPE_GET_DTMF_EVENT "get_dtmf_event"
 
+#define KEY_SESSION_ID "session_id"
+#define KEY_RTP_PORT "rtp_port"
+
 namespace gstmediaserver {
 
 typedef struct Request {

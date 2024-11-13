@@ -75,7 +75,10 @@ bool MediaClient::initSession(std::shared_ptr<MediaSession> session)
         Logger::getLogger()->error("Failed to send request");
     } else {
         if (res.success && res.sessionID.length() > 0) {
-            session->setSessionID(res.sessionID);
+            Logger::getLogger()->info("init_session data: {}", res.data);
+            json data = json::parse(res.data);
+            session->setSessionID(data[KEY_SESSION_ID]);
+            session->setMediaServerPort(data[KEY_RTP_PORT]);
             return true;
         } else {
             Logger::getLogger()->error("Failed to initialize session: {}", res.error);
