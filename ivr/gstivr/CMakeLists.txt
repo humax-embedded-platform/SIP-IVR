@@ -43,7 +43,6 @@ add_library(${LIB} SHARED
   src/model/SipMessage.hpp src/model/SipMessage.cpp
   src/model/SipSdpMessage.hpp src/model/SipSdpMessage.cpp
   src/UdpClient.hpp src/UdpClient.cpp
-  src/CallDetails.h src/CallDetails.cpp
   src/SipClient.hpp src/SipClient.cpp
   src/helpers/cxxopts.hpp src/helpers/IDGen.hpp src/helpers/Log.hpp
   src/SipMessageTypes.h
