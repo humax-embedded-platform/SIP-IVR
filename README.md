@@ -1,3 +1,9 @@
+![Project Logo](images/logo.png)
+<div align="center">
+  <img src="https://www.3cx.com/wp-content/uploads/2020/06/ivr-system.jpg" alt="Logo" width="200">
+  <p>This is a description below the centered logo.</p>
+</div>
+
 # I. Project structure
 
 ## 1. SIPServer
