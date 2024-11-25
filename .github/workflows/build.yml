@@ -22,6 +22,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # Step 2: Set up dependencies
+    - name: Install GStreamer
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          gstreamer1.0-tools \
+          gstreamer1.0-plugins-base \
+          gstreamer1.0-plugins-good \
+          gstreamer1.0-plugins-bad \
+          gstreamer1.0-plugins-ugly \
+          gstreamer1.0-libav
+
+
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
